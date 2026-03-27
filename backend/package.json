@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file .env src/server.js",
+    "dev": "node --watch --env-file .env src/server.js",
+    "test": "vitest",
+    "db:migrate": "npx prisma migrate deploy && npx prisma db execute --file prisma/manual_indexes.sql"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "helmet": "^8.1.0",
+    "jose": "^6.0.11",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.1"
+  },
+  "postInstall": "npx prisma generate"
+}

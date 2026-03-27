@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+//
+// ENUMS
+//
+
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  CANCELLED
+}
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+enum FoundReportStatus {
+  OPEN
+  CLOSED
+}
+
+//
+// CORE MODELS
+//
+
+model User {
+  id        String   @id  // supabase auth UUID
+  email     String   @unique
+  fullName  String
+  role      Role     @default(MEMBER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // soft delete
+
+  loans   Loan[]
+  loansCancelled Loan[] @relation("LoanCancelledBy")
+
+  foundReportsSubmitted FoundReport[] @relation("FoundReportReporter")
+  foundReportsClosed    FoundReport[] @relation("FoundReportCloser")
+}
+
+model Item {
+  id              String    @id @default(uuid())
+  name            String
+  description     String?
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+
+  serialNumber    String?   @unique
+  shortId         String   @unique @db.VarChar(11)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? // soft delete
+
+  // RELATIONS
+  loans        Loan[]
+  foundReports FoundReport[]
+  qrTag        QrTag?
+
+  @@index([categoryId])
+  @@index([deletedAt])
+}
+
+model QrTag {
+  id      String @id @default(uuid())
+  nanoid  String @unique @db.VarChar(6)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  itemId  String? @unique
+  item    Item?   @relation(fields: [itemId], references: [id], onDelete: SetNull)
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // soft delete
+  prefix   String   @unique @db.VarChar(3)
+
+  items     Item[]
+}
+
+//
+// LOANS (SOURCE OF TRUTH FOR ITEM AVAILABILITY)
+//
+model Loan {
+  id           String     @id @default(uuid())
+
+  itemId       String
+  item         Item       @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  status       LoanStatus @default(ACTIVE)
+
+  dueDate      DateTime
+  checkoutDate DateTime   @default(now())
+  returnDate   DateTime?
+
+  openedLatitude    Float
+  openedLongitude   Float
+
+  closedLatitude    Float?
+  closedLongitude   Float?
+
+  cancelledBy    String?
+  cancelledByAdmin User?   @relation("LoanCancelledBy", fields: [cancelledBy], references: [id], onDelete: SetNull)
+  cancelledAt    DateTime?
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?  // soft delete
+
+  @@index([itemId, status])   // covers single-column itemId queries too
+  @@index([userId, status])   // covers single-column userId queries too
+  @@index([status, dueDate])  // overdue queries
+  @@index([dueDate])          // standalone due-date range scans
+  @@index([checkoutDate])     // date-range reports
+}
+
+//
+// FOUND REPORTS
+//
+
+model FoundReport {
+  id          String            @id @default(uuid())
+
+  itemId      String
+  item        Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  reportedBy  String?
+  reporter    User?          @relation("FoundReportReporter", fields: [reportedBy], references: [id], onDelete: SetNull)
+
+  contactInfo String?
+  description String?
+
+  latitude    Float?
+  longitude   Float?
+
+  status      FoundReportStatus @default(OPEN)
+
+  createdAt   DateTime          @default(now())
+  closedAt    DateTime?
+
+  closedBy    String?
+  closedByAdmin User?        @relation("FoundReportCloser", fields: [closedBy], references: [id], onDelete: SetNull)
+
+  deletedAt   DateTime?         // soft delete
+
+  @@index([itemId])
+  @@index([status])
+}
