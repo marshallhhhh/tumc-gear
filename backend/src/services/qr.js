@@ -18,16 +18,7 @@ export async function resolveQr(nanoid) {
       "QR tag not found or not assigned to an item.",
     );
   }
-
-  // Check if the resolved item is soft-deleted
-  if (qrTag.item.deletedAt) {
-    throw new AppError(
-      404,
-      "NOT_FOUND",
-      "QR tag not found or not assigned to an item.",
-    );
-  }
-
+  
   return qrTag.item;
 }
 
