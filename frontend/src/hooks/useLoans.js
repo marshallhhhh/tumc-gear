@@ -9,10 +9,10 @@ export function useLoans(params) {
   });
 }
 
-export function useMyLoans() {
+export function useMyLoans(params) {
   return useQuery({
-    queryKey: ["loans", "my"],
-    queryFn: loansApi.getMyLoans,
+    queryKey: ["loans", "my", params],
+    queryFn: () => loansApi.getMyLoans(params),
     staleTime: 30_000,
   });
 }

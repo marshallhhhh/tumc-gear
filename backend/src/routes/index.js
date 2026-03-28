@@ -9,6 +9,10 @@ import dashboardRouter from "./dashboard.js";
 
 const router = Router();
 
+router.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 router.use("/categories", categoriesRouter);
 router.use("/item", itemRouter);
 router.use("/items", itemsListRouter);

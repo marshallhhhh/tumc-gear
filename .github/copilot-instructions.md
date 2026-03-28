@@ -57,7 +57,7 @@ npm run lint         # ESLint 9 flat config
 - **Validation** — Zod schemas in route files; applied via `validate(schema, source)` middleware. Return 400 with field-level errors.
 - **Error handling** — Throw `AppError(statusCode, errorCode, message, details)`. Error codes are UPPER_SNAKE_CASE. The global error handler formats the response as `{ error, message, details }`.
 - **Soft-delete** — Prisma `$extends` auto-filters `deletedAt IS NULL`. Pass `{ includeDeleted: true }` to bypass. All soft-deletable models have a `deletedAt` field.
-- **Pagination** — Use `parsePagination(query)` from `utils/pagination.js`. Returns `{ skip, take, orderBy }`. Response meta: `{ page, pageSize, totalCount, totalPages }`.
+- **Pagination** — Use `buildPaginationQuery(query)` and `buildPaginationMeta(page, pageSize, totalCount)` from `utils/pagination.js`. Called in the service layer. Response shape is flat: `{ data, page, pageSize, totalCount, totalPages }`.
 - **Rate limiting** — Public endpoints (QR resolve, found reports) limited to 5 req/hr per IP.
 - **HTTP status codes** — 201 for creates, 204 for deletes, 409 for uniqueness conflicts, 422 for business-rule violations. See `backend/docs/system-spec-backend.md`.
 

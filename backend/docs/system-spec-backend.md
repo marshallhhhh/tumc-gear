@@ -464,7 +464,7 @@ PATCH /loans/:id/extend — MEMBER/ADMIN, extend loan (body: { days })
 POST /qr/resolve — public, rate-limited, body: { nanoid } (6 chars), returns item or 404
 POST /qr — ADMIN only, create QR tag (body: { nanoid }, 6 chars, admin-provided)
 GET /qr — ADMIN only, paginated, filter: assigned
-PATCH /qr/:id — ADMIN only, assign QR tag to item (blocked if item already has QR tag)
+POST /qr/assign — ADMIN only, assign QR tag to item (body: { nanoid, itemId }; creates tag if missing; blocked if item already has QR tag)
 DELETE /qr/:id/assign — ADMIN only, unassign QR tag from item (422 if not assigned)
 
 ## Users

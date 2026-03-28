@@ -11,14 +11,14 @@ const router = Router();
 const createSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
-  categoryId: z.string().uuid(),
+  categoryId: z.uuid(),
   serialNumber: z.string().max(100).optional(),
 });
 
 const updateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).nullable().optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.uuid().optional(),
   serialNumber: z.string().max(100).nullable().optional(),
 });
 
@@ -26,6 +26,19 @@ const getQuerySchema = z.object({
   includeLoans: z.enum(["true", "false"]).optional(),
   includeFoundReports: z.enum(["true", "false"]).optional(),
 });
+
+const listQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    sortBy: z.enum(["name", "createdAt", "updatedAt", "category"]).optional(),
+    sortOrder: z.enum(["asc", "desc"]).optional(),
+    category: z.uuid().optional(),
+    hasLoan: z.enum(["true", "false"]).optional(),
+    hasQrTag: z.enum(["true", "false"]).optional(),
+    search: z.string().max(200).optional(),
+  })
+  .strict();
 
 // GET /item/:id — public with optional auth (supports both UUID and shortId)
 // e.g. /item/550e8400-... or /item/AUD-001
@@ -56,4 +69,10 @@ export default router;
 
 // Separate router for GET /items (plural, admin list)
 export const itemsListRouter = Router();
-itemsListRouter.get("/", authenticate, requireRole("ADMIN"), ctrl.list);
+itemsListRouter.get(
+  "/",
+  authenticate,
+  requireRole("ADMIN"),
+  validate(listQuerySchema, "query"),
+  ctrl.list,
+);

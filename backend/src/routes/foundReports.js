@@ -10,12 +10,23 @@ import * as ctrl from "../controllers/foundReports.js";
 const router = Router();
 
 const createSchema = z.object({
-  itemId: z.string().uuid(),
+  itemId: z.uuid(),
   contactInfo: z.string().max(500).optional(),
   description: z.string().max(2000).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
 });
+
+const listQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    sortBy: z.enum(["createdAt", "status"]).optional(),
+    sortOrder: z.enum(["asc", "desc"]).optional(),
+    itemId: z.uuid().optional(),
+    status: z.enum(["OPEN", "CLOSED"]).optional(),
+  })
+  .strict();
 
 router.post(
   "/",
@@ -24,7 +35,13 @@ router.post(
   validate(createSchema),
   ctrl.create,
 );
-router.get("/", authenticate, requireRole("ADMIN"), ctrl.list);
+router.get(
+  "/",
+  authenticate,
+  requireRole("ADMIN"),
+  validate(listQuerySchema, "query"),
+  ctrl.list,
+);
 router.get("/:id", authenticate, requireRole("ADMIN"), ctrl.get);
 router.post("/:id/close", authenticate, requireRole("ADMIN"), ctrl.close);
 

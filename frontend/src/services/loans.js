@@ -6,7 +6,8 @@ export const createLoan = (data) =>
 export const getLoans = (params) =>
   api.get("/loans", { params }).then((r) => r.data);
 
-export const getMyLoans = () => api.get("/loans/my").then((r) => r.data);
+export const getMyLoans = (params) =>
+  api.get("/loans/my", { params }).then((r) => r.data);
 
 export const returnLoan = (id, data) =>
   api.post(`/loans/${id}/return`, data).then((r) => r.data);

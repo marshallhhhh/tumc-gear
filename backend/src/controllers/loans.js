@@ -29,8 +29,8 @@ export async function overdue(req, res, next) {
 
 export async function myLoans(req, res, next) {
   try {
-    const loans = await loanService.getMyLoans(req.user.id);
-    res.json(loans);
+    const result = await loanService.getMyLoans(req.user.id, req.query);
+    res.json(result);
   } catch (err) {
     next(err);
   }

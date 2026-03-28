@@ -12,7 +12,11 @@ export function useItems(params, { enabled = true } = {}) {
 
 export function useItem(
   id,
-  { waitForAuth = false, includeLoans = false, includeFoundReports = false } = {},
+  {
+    waitForAuth = false,
+    includeLoans = false,
+    includeFoundReports = false,
+  } = {},
 ) {
   const params = {};
   if (includeLoans) params.includeLoans = true;
