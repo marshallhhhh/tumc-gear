@@ -2,10 +2,7 @@ import { useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLoans, useCancelLoan } from "../../hooks/useLoans";
 import { useNotification } from "../../context/NotificationContext";
-import {
-  Container,
-  Typography,
-} from "@mui/material";
+import { Container, Typography } from "@mui/material";
 import DataTable from "../../components/DataTable";
 import StatusBadge from "../../components/StatusBadge";
 import ConfirmDialog from "../../components/ConfirmDialog";

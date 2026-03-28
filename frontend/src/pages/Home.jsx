@@ -28,7 +28,11 @@ export default function Home() {
     logoClickCount.current += 1;
     if (logoClickCount.current >= 15) {
       logoClickCount.current = 0;
-      window.open("https://youtu.be/1dJLN43G6KA?si=EYvxtBzo91PJbbRl", "_blank", "noopener,noreferrer");
+      window.open(
+        "https://youtu.be/1dJLN43G6KA?si=EYvxtBzo91PJbbRl",
+        "_blank",
+        "noopener,noreferrer",
+      );
     }
   };
 

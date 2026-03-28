@@ -220,9 +220,7 @@ export default function LoanDetailModal({
           )}
         </DialogContent>
         <DialogActions sx={{ p: 0, pt: 1 }}>
-          <Button onClick={onClose}>
-            Back
-          </Button>
+          <Button onClick={onClose}>Back</Button>
           {isActive && (isOwnLoan || showAdminActions) && (
             <>
               <Button
