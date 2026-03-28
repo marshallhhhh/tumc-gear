@@ -12,9 +12,13 @@ export async function create(req, res, next) {
 export async function get(req, res, next) {
   try {
     const isAdmin = req.user?.role === "ADMIN";
+    const includes = new Set(
+      req.query.include ? req.query.include.split(",").map((s) => s.trim()) : [],
+    );
     const item = await itemService.getItem(req.params.id, {
       isAdmin,
       userId: req.user?.id,
+      includes,
     });
     res.json(item);
   } catch (err) {

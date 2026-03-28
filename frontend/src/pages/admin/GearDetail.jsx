@@ -32,7 +32,12 @@ export default function GearDetail() {
   const navigate = useNavigate();
   const { notify } = useNotification();
 
-  const { data: item, isLoading, error, refetch } = useItem(shortId);
+  const {
+    data: item,
+    isLoading,
+    error,
+    refetch,
+  } = useItem(shortId, { include: "loans,foundReports" });
   const deleteItem = useDeleteItem();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
