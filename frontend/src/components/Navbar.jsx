@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link as RouterLink, Router } from "react-router-dom";
+import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   AppBar,
@@ -69,11 +69,7 @@ export default function Navbar() {
   return (
     <AppBar position="sticky" color="primary">
       <Toolbar>
-        <Box
-          component={RouterLink}
-          to="/home"
-          sx={{ display: "flex", mr: 2 }}
-        >
+        <Box component={RouterLink} to="/home" sx={{ display: "flex", mr: 2 }}>
           <Box
             component="img"
             src="/logo-xs.png"

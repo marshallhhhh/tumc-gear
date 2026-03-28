@@ -26,8 +26,10 @@ export default function ConfirmDialog({
       fullWidth
       sx={{ p: 0 }}
     >
-      <DialogTitle gutterBottom sx={{ p: 0 }}>{title}</DialogTitle>
-      <DialogContent  sx={{ p: 0, pt: 1 }}>
+      <DialogTitle gutterBottom sx={{ p: 0 }}>
+        {title}
+      </DialogTitle>
+      <DialogContent sx={{ p: 0, pt: 1 }}>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
       <DialogActions sx={{ p: 0, pt: 1 }}>
