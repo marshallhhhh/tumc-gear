@@ -53,18 +53,23 @@ export async function createItem(data) {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function getItem(identifier, { isAdmin = false, userId } = {}) {
+export async function getItem(
+  identifier,
+  { isAdmin = false, userId, includes = new Set() } = {},
+) {
   const where = UUID_RE.test(identifier)
     ? { id: identifier }
     : { shortId: identifier };
 
   const include = { category: true, qrTag: true };
 
-  if (isAdmin) {
+  if (isAdmin && includes.has("loans")) {
     include.loans = {
       orderBy: { createdAt: "desc" },
       include: { user: { select: { id: true, email: true, fullName: true } } },
     };
+  }
+  if (isAdmin && includes.has("foundReports")) {
     include.foundReports = {
       orderBy: { createdAt: "desc" },
       include: {
@@ -79,30 +84,32 @@ export async function getItem(identifier, { isAdmin = false, userId } = {}) {
     throw new AppError(404, "NOT_FOUND", "Item not found.");
   }
 
-  if (!isAdmin) {
-    const activeLoan = await prisma.loan.findFirst({
-      where: { itemId: item.id, status: "ACTIVE" },
-      select: {
-        id: true,
-        userId: true,
-        status: true,
-        dueDate: true,
-        checkoutDate: true,
-      },
-    });
-
-    if (activeLoan) {
-      const isOwnLoan = userId && activeLoan.userId === userId;
-      return {
-        ...item,
-        activeLoan: isOwnLoan ? activeLoan : { status: activeLoan.status },
-      };
-    }
-
-    return { ...item, activeLoan: null };
+  // When full loans are already included, return as-is
+  if (include.loans) {
+    return item;
   }
 
-  return item;
+  // Lightweight path: only fetch the active loan
+  const activeLoan = await prisma.loan.findFirst({
+    where: { itemId: item.id, status: "ACTIVE" },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      dueDate: true,
+      checkoutDate: true,
+    },
+  });
+
+  if (activeLoan) {
+    const isOwnLoan = userId && activeLoan.userId === userId;
+    return {
+      ...item,
+      activeLoan: isOwnLoan ? activeLoan : { status: activeLoan.status },
+    };
+  }
+
+  return { ...item, activeLoan: null };
 }
 
 export async function updateItem(id, data) {

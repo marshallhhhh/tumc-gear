@@ -27,7 +27,7 @@ import { ErrorOutline as ErrorIcon } from "@mui/icons-material";
 
 export default function ItemDetail() {
   const { shortId } = useParams();
-  const { isMember, user, loading: authLoading } = useAuth();
+  const { isMember, isAuthenticated, user, loading: authLoading } = useAuth();
   const { notify } = useNotification();
   const navigate = useNavigate();
 
@@ -149,6 +149,19 @@ export default function ItemDetail() {
           {/* qrtag */}
           {item.qrTag && (
             <QRCodeSVG value={`${appUrl}/t/${item.qrTag.nanoid}`} size={128} />
+          )}
+
+          {/* Sign in prompt for unauthenticated users */}
+          {!isAuthenticated && (
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() =>
+                navigate("/login", { state: { from: `/item/${shortId}` } })
+              }
+            >
+              Sign in to borrow this item
+            </Button>
           )}
 
           {/* Checkout button for members when item is available */}

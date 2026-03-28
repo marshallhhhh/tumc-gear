@@ -22,9 +22,21 @@ const updateSchema = z.object({
   serialNumber: z.string().max(100).nullable().optional(),
 });
 
+const ALLOWED_INCLUDES = new Set(["loans", "foundReports"]);
+
+const getQuerySchema = z.object({
+  include: z
+    .string()
+    .refine(
+      (v) => v.split(",").every((s) => ALLOWED_INCLUDES.has(s.trim())),
+      { message: "include must be a comma-separated list of: loans, foundReports" },
+    )
+    .optional(),
+});
+
 // GET /item/:id — public with optional auth (supports both UUID and shortId)
 // e.g. /item/550e8400-... or /item/AUD-001
-router.get("/:id", optionalAuth, ctrl.get);
+router.get("/:id", optionalAuth, validate(getQuerySchema, "query"), ctrl.get);
 
 // POST /item — admin only
 router.post(

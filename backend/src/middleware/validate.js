@@ -12,7 +12,10 @@ export function validate(schema, source = "body") {
         new AppError(400, "BAD_REQUEST", "Validation failed.", details),
       );
     }
-    req[source] = result.data;
+    // Express 5 makes req.query a read-only getter; skip reassignment for query
+    if (source !== "query") {
+      req[source] = result.data;
+    }
     next();
   };
 }

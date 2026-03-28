@@ -10,10 +10,11 @@ export function useItems(params, { enabled = true } = {}) {
   });
 }
 
-export function useItem(id, { waitForAuth = false } = {}) {
+export function useItem(id, { waitForAuth = false, include } = {}) {
+  const params = include ? { include } : undefined;
   return useQuery({
-    queryKey: ["item", id],
-    queryFn: () => itemsApi.getItemById(id),
+    queryKey: ["item", id, { include }],
+    queryFn: () => itemsApi.getItemById(id, params),
     staleTime: 60_000,
     enabled: !!id && !waitForAuth,
   });
