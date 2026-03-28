@@ -55,7 +55,7 @@ const UUID_RE =
 
 export async function getItem(
   identifier,
-  { isAdmin = false, userId, includes = new Set() } = {},
+  { isAdmin = false, userId, includeLoans = false, includeFoundReports = false } = {},
 ) {
   const where = UUID_RE.test(identifier)
     ? { id: identifier }
@@ -63,13 +63,13 @@ export async function getItem(
 
   const include = { category: true, qrTag: true };
 
-  if (isAdmin && includes.has("loans")) {
+  if (isAdmin && includeLoans) {
     include.loans = {
       orderBy: { createdAt: "desc" },
       include: { user: { select: { id: true, email: true, fullName: true } } },
     };
   }
-  if (isAdmin && includes.has("foundReports")) {
+  if (isAdmin && includeFoundReports) {
     include.foundReports = {
       orderBy: { createdAt: "desc" },
       include: {
