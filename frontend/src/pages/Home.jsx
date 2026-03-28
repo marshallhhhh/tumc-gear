@@ -8,6 +8,7 @@ import {
   Button,
   Typography,
   Paper,
+  Skeleton,
   InputAdornment,
   Divider,
 } from "@mui/material";
@@ -17,7 +18,7 @@ import QrScanner from "../components/QrScanner";
 const SHORT_ID_REGEX = /^[A-Z]{3}-\d{3,}$/;
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   const [shortId, setShortId] = useState("");
@@ -72,6 +73,28 @@ export default function Home() {
     }
     setShortIdError("");
   };
+
+  if (loading) {
+    return (
+      <Container
+        maxWidth="xs"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flex: 1,
+        }}
+      >
+        <Box sx={{ width: "100%" }} aria-busy="true">
+          <Skeleton variant="rectangular" height={100} sx={{ mb: 3 }} />
+          <Skeleton variant="text" height={42} width="75%" sx={{ mb: 1 }} />
+          <Skeleton variant="text" height={24} width="100%" sx={{ mb: 3 }} />
+          <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
+          <Skeleton variant="rectangular" height={56} />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container

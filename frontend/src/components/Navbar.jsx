@@ -17,6 +17,7 @@ import {
   Divider,
   ListItemIcon,
   ListItemText,
+  Skeleton,
 } from "@mui/material";
 import {
   Home as HomeIcon,
@@ -35,7 +36,7 @@ import {
 } from "@mui/icons-material";
 
 export default function Navbar() {
-  const { isAuthenticated, isAdmin, user, signOut } = useAuth();
+  const { isAuthenticated, isAdmin, user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
@@ -52,6 +53,30 @@ export default function Navbar() {
   };
 
   if (isMobile) {
+    if (loading) {
+      return (
+        <Paper
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1100,
+            backgroundColor: "primary.main",
+            p: 1,
+            display: "flex",
+            justifyContent: "space-around",
+          }}
+          elevation={3}
+          aria-busy="true"
+        >
+          <Skeleton variant="rounded" width={72} height={36} />
+          <Skeleton variant="rounded" width={72} height={36} />
+          <Skeleton variant="rounded" width={72} height={36} />
+        </Paper>
+      );
+    }
+
     return (
       <MobileNav
         isAuthenticated={isAuthenticated}
@@ -87,7 +112,14 @@ export default function Navbar() {
         </Typography>
 
         <Box sx={{ flexGrow: 1, display: "flex", gap: 1 }}>
-          {!isAuthenticated && (
+          {loading && (
+            <>
+              <Skeleton variant="rounded" width={84} height={36} />
+              <Skeleton variant="rounded" width={84} height={36} />
+            </>
+          )}
+
+          {!isAuthenticated && !loading && (
             <>
               <Button color="inherit" component={RouterLink} to="/login">
                 Sign In
@@ -98,7 +130,7 @@ export default function Navbar() {
             </>
           )}
 
-          {isAuthenticated && (
+          {isAuthenticated && !loading && (
             <>
               <Button color="inherit" component={RouterLink} to="/home">
                 Borrow
@@ -109,7 +141,7 @@ export default function Navbar() {
             </>
           )}
 
-          {isAdmin && (
+          {isAdmin && !loading && (
             <>
               <Button
                 color="inherit"
@@ -163,7 +195,7 @@ export default function Navbar() {
           )}
         </Box>
 
-        {isAuthenticated && (
+        {isAuthenticated && !loading && (
           <>
             <Button
               color="inherit"
