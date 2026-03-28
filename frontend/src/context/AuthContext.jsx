@@ -16,11 +16,14 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchUser = useCallback(async () => {
+    setLoading(true);
     try {
       const { data } = await api.get("/users/me");
       setUser(data);
     } catch {
       setUser(null);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -29,8 +32,9 @@ export function AuthProvider({ children }) {
       setSession(s);
       setAccessToken(s?.access_token ?? null);
       if (s) {
-        fetchUser().finally(() => setLoading(false));
+        fetchUser();
       } else {
+        setUser(null);
         setLoading(false);
       }
     });
@@ -43,6 +47,7 @@ export function AuthProvider({ children }) {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await fetchUser();
       } else if (event === "SIGNED_OUT") {
+        setLoading(false);
         setUser(null);
       }
     });
