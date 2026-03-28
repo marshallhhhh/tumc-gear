@@ -13,8 +13,10 @@ description: "Use when editing backend Express routes, controllers, services, or
 import { z } from "zod/v4";
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate.js";
+import { optionalAuth } from "../middleware/optionalAuth.js";
 import { requireRole } from "../middleware/requireRole.js";
 import { validate } from "../middleware/validate.js";
+import { publicRateLimiter } from "../middleware/rateLimiter.js";
 import * as ctrl from "../controllers/things.js";
 
 const router = Router();
@@ -48,6 +50,9 @@ export default router;
 - Zod schemas defined inline at top of each route file.
 - Use `validate(schema)` for body (default), `validate(schema, 'query')` for query params.
 - Patch schemas use `.optional()` on all fields; nullable fields add `.nullable()`.
+- `requireRole(...roles)` is variadic — pass one or more roles: `requireRole("ADMIN")` or `requireRole("MEMBER", "ADMIN")`.
+- `optionalAuth` — like `authenticate` but silently continues if no token is present. Used on public endpoints that optionally enrich responses for logged-in users.
+- `publicRateLimiter` — 5 req/hr per IP. Apply to public endpoints (QR resolve, found reports) before any auth middleware.
 
 ### Controllers (`controllers/*.js`) — Thin, delegate to service
 
@@ -58,6 +63,28 @@ export async function create(req, res, next) {
   try {
     const thing = await thingService.createThing(req.body);
     res.status(201).json(thing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function get(req, res, next) {
+  try {
+    const isAdmin = req.user?.role === "ADMIN";
+    const thing = await thingService.getThing(req.params.id, {
+      isAdmin,
+      userId: req.user?.id,
+    });
+    res.json(thing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function list(req, res, next) {
+  try {
+    const result = await thingService.listThings(req.query);
+    res.json(result);
   } catch (err) {
     next(err);
   }
@@ -74,7 +101,8 @@ export async function remove(req, res, next) {
 ```
 
 - 201 for creates, 204 for deletes, 200 (default) for gets/updates.
-- Pass context to services: `{ isAdmin: req.user?.role === 'ADMIN', userId: req.user?.id }`.
+- Compute `isAdmin` in controller: `const isAdmin = req.user?.role === 'ADMIN'`. Pass as part of an options object to the service.
+- For list endpoints, pass `req.query` directly to the service — pagination is handled in the service layer.
 - Every handler wraps in `try/catch` and calls `next(err)`.
 
 ### Services (`services/*.js`) — Business logic, throw AppError
@@ -91,14 +119,16 @@ export async function getThing(id) {
 ```
 
 - `AppError(statusCode, errorCode, message, details = {})` — error codes are UPPER_SNAKE_CASE.
-- Common codes: `NOT_FOUND` (404), `BAD_REQUEST` (400), `CONFLICT` (409), `UNPROCESSABLE_ENTITY` (422).
+- Common codes: `NOT_FOUND` (404), `BAD_REQUEST` (400), `FORBIDDEN` (403), `CONFLICT` (409), `UNPROCESSABLE_ENTITY` (422).
 
 ## ES Modules
 
 - All imports use `.js` extension: `import { prisma } from '../config/prisma.js';`
 - Named exports for services and controllers. Default export for Router.
 
-## Pagination
+## Pagination (in service layer)
+
+Pagination is handled inside service functions, not controllers. Controllers pass `req.query` to the service.
 
 ```js
 import {
@@ -106,19 +136,31 @@ import {
   buildPaginationMeta,
 } from "../utils/pagination.js";
 
-const { skip, take, orderBy, page, pageSize } = buildPaginationQuery({
-  ...req.query,
-  allowedSortFields: ["name", "createdAt"],
-});
-const [items, totalCount] = await Promise.all([
-  prisma.item.findMany({ where, skip, take, orderBy }),
-  prisma.item.count({ where }),
-]);
-res.json({
-  data: items,
-  meta: buildPaginationMeta(page, pageSize, totalCount),
-});
+export async function listThings(query) {
+  const {
+    skip,
+    take,
+    orderBy,
+    page: p,
+    pageSize: ps,
+  } = buildPaginationQuery({
+    ...query,
+    allowedSortFields: ["name", "createdAt"],
+  });
+
+  const where = {};
+  // … build filters from query …
+
+  const [items, totalCount] = await Promise.all([
+    prisma.thing.findMany({ where, skip, take, orderBy }),
+    prisma.thing.count({ where }),
+  ]);
+
+  return { data: items, ...buildPaginationMeta(p, ps, totalCount) };
+}
 ```
+
+Response shape is flat — `{ data, page, pageSize, totalCount, totalPages }`.
 
 ## Soft-Delete
 

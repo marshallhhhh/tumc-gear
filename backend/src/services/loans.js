@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import {
@@ -8,35 +9,55 @@ import {
 export async function createLoan(userId, data) {
   const { itemId, days, latitude, longitude } = data;
 
-  const item = await prisma.item.findUnique({ where: { id: itemId } });
-  if (!item) {
-    throw new AppError(404, "NOT_FOUND", "Item not found.");
-  }
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const item = await tx.item.findUnique({ where: { id: itemId } });
+        if (!item) {
+          throw new AppError(404, "NOT_FOUND", "Item not found.");
+        }
 
-  const activeLoan = await prisma.loan.findFirst({
-    where: { itemId, status: "ACTIVE" },
-  });
-  if (activeLoan) {
-    throw new AppError(
-      409,
-      "CONFLICT",
-      "This item already has an active loan.",
+        const activeLoan = await tx.loan.findFirst({
+          where: { itemId, status: "ACTIVE" },
+        });
+        if (activeLoan) {
+          throw new AppError(
+            409,
+            "CONFLICT",
+            "This item already has an active loan.",
+          );
+        }
+
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + days);
+
+        return tx.loan.create({
+          data: {
+            itemId,
+            userId,
+            dueDate,
+            openedLatitude: latitude,
+            openedLongitude: longitude,
+          },
+          include: { item: true },
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      (err.code === "P2002" || err.code === "P2034")
+    ) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "This item already has an active loan.",
+      );
+    }
+    throw err;
   }
-
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + days);
-
-  return prisma.loan.create({
-    data: {
-      itemId,
-      userId,
-      dueDate,
-      openedLatitude: latitude,
-      openedLongitude: longitude,
-    },
-    include: { item: true },
-  });
 }
 
 export async function listLoans(query) {
@@ -110,12 +131,38 @@ export async function listOverdueLoans(query) {
   });
 }
 
-export async function getMyLoans(userId) {
-  return prisma.loan.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    include: { item: { include: { category: true } } },
+export async function getMyLoans(userId, query = {}) {
+  const { page, pageSize, sortBy, sortOrder, status } = query;
+
+  const {
+    skip,
+    take,
+    orderBy,
+    page: p,
+    pageSize: ps,
+  } = buildPaginationQuery({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    allowedSortFields: ["dueDate", "status", "createdAt", "checkoutDate"],
   });
+
+  const where = { userId };
+  if (status) where.status = status;
+
+  const [loans, totalCount] = await Promise.all([
+    prisma.loan.findMany({
+      where,
+      skip,
+      take,
+      orderBy: orderBy || { createdAt: "desc" },
+      include: { item: { include: { category: true } } },
+    }),
+    prisma.loan.count({ where }),
+  ]);
+
+  return { data: loans, ...buildPaginationMeta(p, ps, totalCount) };
 }
 
 export async function returnLoan(loanId, userId, data) {

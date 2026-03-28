@@ -12,7 +12,7 @@ const createSchema = z.object({
 });
 
 const updateSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1).max(100).optional(),
 });
 
 router.get("/", ctrl.list);

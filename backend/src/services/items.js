@@ -55,7 +55,12 @@ const UUID_RE =
 
 export async function getItem(
   identifier,
-  { isAdmin = false, userId, includeLoans = false, includeFoundReports = false } = {},
+  {
+    isAdmin = false,
+    userId,
+    includeLoans = false,
+    includeFoundReports = false,
+  } = {},
 ) {
   const where = UUID_RE.test(identifier)
     ? { id: identifier }

@@ -18,8 +18,18 @@ const createSchema = z.object({
 
 const assignSchema = z.object({
   nanoid: z.string().length(6),
-  itemId: z.string().uuid(),
+  itemId: z.uuid(),
 });
+
+const listQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    sortBy: z.enum(["createdAt", "nanoid"]).optional(),
+    sortOrder: z.enum(["asc", "desc"]).optional(),
+    assigned: z.enum(["true", "false"]).optional(),
+  })
+  .strict();
 
 router.post(
   "/resolve",
@@ -34,7 +44,13 @@ router.post(
   validate(createSchema),
   ctrl.create,
 );
-router.get("/", authenticate, requireRole("ADMIN"), ctrl.list);
+router.get(
+  "/",
+  authenticate,
+  requireRole("ADMIN"),
+  validate(listQuerySchema, "query"),
+  ctrl.list,
+);
 router.post(
   "/assign",
   authenticate,

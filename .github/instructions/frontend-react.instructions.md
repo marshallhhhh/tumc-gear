@@ -47,8 +47,8 @@ export function useCreateThing() {
 ```
 
 - Query keys: `['domain', ...params]` — hierarchical for invalidation.
-- Always invalidate the parent list query on mutation success.
-- Use `enabled: !!id` for conditional queries.
+- Invalidate all affected query keys on mutation success — not just the parent list. Cross-domain invalidation is common (e.g., loan mutations invalidate `["loans"]`, `["items"]`, `["item"]`, `["dashboard"]`).
+- Conditional queries: use `enabled: !!id` for detail queries. Hooks may also accept an `enabled` option for more complex conditions (e.g., `enabled: !!id && !waitForAuth`).
 
 ### Components/Pages — Destructure hooks, async handlers
 
@@ -63,32 +63,43 @@ const handleSubmit = async (values) => {
     await createThing.mutateAsync(values);
     notify("Created successfully", "success");
   } catch (err) {
-    notify(err.response?.data?.message || err.message, "error");
+    notify(
+      err.response?.data?.message || err.message || "Failed to create",
+      "error",
+    );
   }
 };
 ```
 
-- Default export for pages, named exports for feature components.
+- Default export for both pages and feature components.
 - `.mutateAsync()` for async/await in handlers, not `.mutate()`.
-- Error messages: extract from `err.response?.data?.message`.
+- Error messages: extract with triple fallback `err.response?.data?.message || err.message || "Fallback text"`.
 
 ## Auth & Notifications
 
-- **Auth:** `const { user, session, isAdmin, isMember, isAuthenticated } = useAuth();`
+- **Auth:** `const { user, session, loading, isAdmin, isMember, isAuthenticated } = useAuth();`
+  - Also exposes auth methods: `signIn`, `signUp`, `signOut`, `resetPassword`, `updatePassword`.
+  - Use `loading` to gate renders while auth state is resolving (see ProtectedRoute, AdminRoute).
 - **Notify:** `const { notify } = useNotification();` → `notify(message, severity)` where severity is `'success' | 'error' | 'warning' | 'info'`.
 
 ## Loading & Error States
 
-- Full-page loading: `<PageSkeleton />` from `components/PageSkeleton`.
+- Page loading: use named exports from `components/PageSkeleton`:
+  - `<TableSkeleton rows={5} columns={4} />` for table pages.
+  - `<DetailSkeleton />` for detail pages.
+  - `<CardsSkeleton count={6} />` for card grid pages.
 - Inline loading: MUI `<Skeleton />`.
 - Button loading: disable with `.isPending` + show `<CircularProgress size={24} />`.
 - Errors: MUI `<Alert severity="error">`.
+- Empty state: use `<EmptyState />` from `components/EmptyState`.
 
 ## MUI Styling
 
 - Use the `sx` prop for all styling — no `styled()`, no CSS modules.
-- Theme colors: primary `#1D4ED8`, secondary `#EF5526`, info `#3F88C5`.
+- Theme palette: primary `#1347e7`, success `#1c9f2b`, yellow `#fbc02d`, purple `#cf2bc0`.
+- Background: default `#fafafa`, paper `#ffffff`. Border radius: `8`.
 - `textTransform: 'none'` is already set on buttons globally.
+- Chips default to `variant: "filled"`.
 
 ## Routing Guards
 
