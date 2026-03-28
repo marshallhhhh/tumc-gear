@@ -22,16 +22,9 @@ const updateSchema = z.object({
   serialNumber: z.string().max(100).nullable().optional(),
 });
 
-const ALLOWED_INCLUDES = new Set(["loans", "foundReports"]);
-
 const getQuerySchema = z.object({
-  include: z
-    .string()
-    .refine(
-      (v) => v.split(",").every((s) => ALLOWED_INCLUDES.has(s.trim())),
-      { message: "include must be a comma-separated list of: loans, foundReports" },
-    )
-    .optional(),
+  includeLoans: z.enum(["true", "false"]).optional(),
+  includeFoundReports: z.enum(["true", "false"]).optional(),
 });
 
 // GET /item/:id — public with optional auth (supports both UUID and shortId)

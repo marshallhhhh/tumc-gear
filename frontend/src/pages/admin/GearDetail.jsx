@@ -37,7 +37,7 @@ export default function GearDetail() {
     isLoading,
     error,
     refetch,
-  } = useItem(shortId, { include: "loans,foundReports" });
+  } = useItem(shortId, { includeLoans: true, includeFoundReports: true });
   const deleteItem = useDeleteItem();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
