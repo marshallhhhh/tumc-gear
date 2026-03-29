@@ -25,7 +25,8 @@ const updateSchema = z.object({
 const getQuerySchema = z.object({
   includeLoans: z.enum(["true", "false"]).optional(),
   includeFoundReports: z.enum(["true", "false"]).optional(),
-});
+})
+.strict();
 
 const listQuerySchema = z
   .object({
