@@ -6,14 +6,12 @@ export async function getDashboardStats() {
 
   const [
     totalItems,
-    checkedOutItems,
     openFoundReports,
     activeLoans,
     overdueLoans,
     totalUsers,
   ] = await Promise.all([
     prisma.item.count(),
-    prisma.loan.count({ where: { status: "ACTIVE" } }),
     prisma.foundReport.count({ where: { status: "OPEN" } }),
     prisma.loan.count({ where: { status: "ACTIVE" } }),
     prisma.loan.count({
@@ -24,7 +22,6 @@ export async function getDashboardStats() {
 
   return {
     totalItems,
-    checkedOutItems,
     openFoundReports,
     activeLoans,
     overdueLoans,
