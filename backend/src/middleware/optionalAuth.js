@@ -1,10 +1,7 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { jwtVerify } from "jose";
 import { env } from "../config/env.js";
+import { JWKS } from "../config/jwks.js";
 import { prisma } from "../config/prisma.js";
-
-const JWKS = createRemoteJWKSet(
-  new URL(`${env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
-);
 
 export async function optionalAuth(req, _res, next) {
   const authHeader = req.headers.authorization;
