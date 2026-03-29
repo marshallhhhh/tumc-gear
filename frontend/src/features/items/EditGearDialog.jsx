@@ -52,7 +52,9 @@ export default function EditGearDialog({ item, open, onClose }) {
         catId = cat.id;
       } catch (err) {
         notify(
-          err.response?.data?.message || "Failed to create category",
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to create category",
           "error",
         );
         return;
@@ -77,7 +79,10 @@ export default function EditGearDialog({ item, open, onClose }) {
       notify("Item updated", "success");
       onClose();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to update item", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to update item",
+        "error",
+      );
     }
   };
 
@@ -98,7 +103,7 @@ export default function EditGearDialog({ item, open, onClose }) {
           margin="normal"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          inputProps={{ maxLength: 200 }}
+          slotProps={{ htmlInput: { maxLength: 200 } }}
         />
         {!creatingCategory ? (
           <Box>
@@ -128,7 +133,7 @@ export default function EditGearDialog({ item, open, onClose }) {
               margin="normal"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              inputProps={{ maxLength: 100 }}
+              slotProps={{ htmlInput: { maxLength: 100 } }}
             />
             <Button
               size="small"
@@ -149,7 +154,7 @@ export default function EditGearDialog({ item, open, onClose }) {
           margin="normal"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          inputProps={{ maxLength: 1000 }}
+          slotProps={{ htmlInput: { maxLength: 1000 } }}
         />
         <TextField
           label="Serial Number"
@@ -157,7 +162,7 @@ export default function EditGearDialog({ item, open, onClose }) {
           margin="normal"
           value={serialNumber}
           onChange={(e) => setSerialNumber(e.target.value)}
-          inputProps={{ maxLength: 100 }}
+          slotProps={{ htmlInput: { maxLength: 100 } }}
         />
       </DialogContent>
       <DialogActions sx={{ p: 0 }}>

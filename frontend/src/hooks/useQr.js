@@ -36,6 +36,7 @@ export function useUnassignQr() {
     mutationFn: qrApi.unassignQr,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["qrTags"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
       qc.invalidateQueries({ queryKey: ["item"] });
     },
   });

@@ -55,7 +55,9 @@ export default function QrTagSection({ item, onUpdated }) {
         setReassignConfirmOpen(true);
       } else {
         notify(
-          err.response?.data?.message || "Failed to assign QR tag",
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to assign QR tag",
           "error",
         );
       }
@@ -78,7 +80,9 @@ export default function QrTagSection({ item, onUpdated }) {
       onUpdated?.();
     } catch (err) {
       notify(
-        err.response?.data?.message || "Failed to reassign QR tag",
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to reassign QR tag",
         "error",
       );
       setConflictDetails(null);
@@ -92,7 +96,10 @@ export default function QrTagSection({ item, onUpdated }) {
       notify("QR tag removed", "success");
       onUpdated?.();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to remove QR tag", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to remove QR tag",
+        "error",
+      );
     }
   };
 

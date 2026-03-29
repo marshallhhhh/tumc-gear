@@ -70,7 +70,10 @@ export default function GearDetail() {
       notify("Item deleted", "success");
       navigate("/admin/items");
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to delete item", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to delete item",
+        "error",
+      );
     }
   };
 
@@ -223,7 +226,7 @@ export default function GearDetail() {
             </Box>
             <Button
               variant="outlined"
-              size="md"
+              size="medium"
               sx={{ alignSelf: "flex-start", mt: 0.5 }}
               onClick={() =>
                 setLoanModal({

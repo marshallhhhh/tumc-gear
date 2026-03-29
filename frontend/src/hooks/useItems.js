@@ -36,6 +36,7 @@ export function useCreateItem() {
     mutationFn: itemsApi.createItem,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }
@@ -57,6 +58,7 @@ export function useDeleteItem() {
     mutationFn: itemsApi.deleteItem,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

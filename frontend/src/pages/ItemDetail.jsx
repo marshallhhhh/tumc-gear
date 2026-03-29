@@ -253,7 +253,7 @@ export default function ItemDetail() {
                     Math.max(1, Math.min(30, parseInt(e.target.value) || 1)),
                   )
                 }
-                inputProps={{ min: 1, max: 30 }}
+                slotProps={{ htmlInput: { min: 1, max: 30 } }}
                 size="small"
                 fullWidth
                 sx={{ mt: 1 }}

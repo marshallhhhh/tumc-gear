@@ -1,4 +1,3 @@
-import "react";
 import { Box, Typography } from "@mui/material";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";

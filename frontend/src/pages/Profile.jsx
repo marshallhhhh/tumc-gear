@@ -43,7 +43,9 @@ export default function Profile() {
       notify("Profile updated", "success");
     } catch (err) {
       notify(
-        err.response?.data?.message || "Failed to update profile",
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to update profile",
         "error",
       );
     }

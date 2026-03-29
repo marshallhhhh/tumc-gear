@@ -290,7 +290,7 @@ export default function LoanDetailModal({
                 Math.max(1, Math.min(30, parseInt(e.target.value) || 1)),
               )
             }
-            inputProps={{ min: 1, max: 30 }}
+            slotProps={{ htmlInput: { min: 1, max: 30 } }}
             sx={{ width: 100 }}
           />
         </DialogContent>

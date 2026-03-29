@@ -51,7 +51,9 @@ export default function CreateItemDialog({ open, onClose, onCreated }) {
         catId = cat.id;
       } catch (err) {
         notify(
-          err.response?.data?.message || "Failed to create category",
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to create category",
           "error",
         );
         return;
@@ -75,7 +77,10 @@ export default function CreateItemDialog({ open, onClose, onCreated }) {
       onClose();
       onCreated?.(item);
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to create item", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to create item",
+        "error",
+      );
     }
   };
 

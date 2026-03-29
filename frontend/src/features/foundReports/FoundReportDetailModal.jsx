@@ -28,7 +28,10 @@ export default function FoundReportDetailModal({ report, open, onClose }) {
       notify("Report closed", "success");
       onClose();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to close report", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to close report",
+        "error",
+      );
     }
   };
 
