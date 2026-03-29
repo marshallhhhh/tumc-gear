@@ -29,7 +29,11 @@ export async function getById(req, res, next) {
 
 export async function update(req, res, next) {
   try {
-    const user = await userService.updateUser(req.params.id, req.body, req.user.id);
+    const user = await userService.updateUser(
+      req.params.id,
+      req.body,
+      req.user.id,
+    );
     res.json(user);
   } catch (err) {
     next(err);

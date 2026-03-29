@@ -10,7 +10,9 @@ export const getQrTags = (params) =>
   api.get("/qr", { params }).then((r) => r.data);
 
 export const assignQr = (nanoid, itemId, { force, currentItemId } = {}) =>
-  api.post("/qr/assign", { nanoid, itemId, force, currentItemId }).then((r) => r.data);
+  api
+    .post("/qr/assign", { nanoid, itemId, force, currentItemId })
+    .then((r) => r.data);
 
 export const unassignQr = (id) =>
   api.delete(`/qr/${id}/assign`).then((r) => r.data);

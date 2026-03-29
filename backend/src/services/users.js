@@ -59,11 +59,19 @@ export async function updateUser(id, data, adminId) {
   }
 
   if (id === adminId && data.role && data.role !== "ADMIN") {
-    throw new AppError(422, "UNPROCESSABLE_ENTITY", "You cannot demote your own account.");
+    throw new AppError(
+      422,
+      "UNPROCESSABLE_ENTITY",
+      "You cannot demote your own account.",
+    );
   }
 
   if (id === adminId && data.isActive === false) {
-    throw new AppError(422, "UNPROCESSABLE_ENTITY", "You cannot deactivate your own account.");
+    throw new AppError(
+      422,
+      "UNPROCESSABLE_ENTITY",
+      "You cannot deactivate your own account.",
+    );
   }
 
   if (data.fullName && !NAME_REGEX.test(data.fullName)) {
@@ -114,7 +122,11 @@ export async function listUsers(query) {
 
 export async function deleteUser(id, adminId) {
   if (id === adminId) {
-    throw new AppError(422, "UNPROCESSABLE_ENTITY", "You cannot delete your own account.");
+    throw new AppError(
+      422,
+      "UNPROCESSABLE_ENTITY",
+      "You cannot delete your own account.",
+    );
   }
 
   const user = await prisma.user.findUnique({ where: { id } });
