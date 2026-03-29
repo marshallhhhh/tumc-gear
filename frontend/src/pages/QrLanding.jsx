@@ -16,6 +16,7 @@ import {
   Paper,
   Button,
 } from "@mui/material";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function QrLanding() {
   const { nanoid } = useParams();
@@ -28,6 +29,9 @@ export default function QrLanding() {
   const [notFound, setNotFound] = useState(false);
   const [showAssignUI, setShowAssignUI] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [reassignConfirmOpen, setReassignConfirmOpen] = useState(false);
+  const [conflictDetails, setConflictDetails] = useState(null);
+  const [pendingItemId, setPendingItemId] = useState(null);
 
   // Items for admin assignment
   const { data: itemsData } = useItems(
@@ -67,8 +71,39 @@ export default function QrLanding() {
       const item = itemsData?.data?.find((i) => i.id === itemId);
       navigate(`/admin/items/${item?.shortId || ""}`, { replace: true });
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to assign QR tag", "error");
+      if (err.response?.data?.error === "QR_ALREADY_ASSIGNED") {
+        setPendingItemId(itemId);
+        setConflictDetails(err.response.data.details);
+        setReassignConfirmOpen(true);
+      } else {
+        notify(
+          err.response?.data?.message || "Failed to assign QR tag",
+          "error",
+        );
+      }
     }
+  };
+
+  const handleReassign = async () => {
+    setReassignConfirmOpen(false);
+    try {
+      await assignQr.mutateAsync({
+        nanoid,
+        itemId: pendingItemId,
+        force: true,
+        currentItemId: conflictDetails.currentItemId,
+      });
+      notify("QR tag reassigned successfully", "success");
+      const item = itemsData?.data?.find((i) => i.id === pendingItemId);
+      navigate(`/admin/items/${item?.shortId || ""}`, { replace: true });
+    } catch (err) {
+      notify(
+        err.response?.data?.message || "Failed to reassign QR tag",
+        "error",
+      );
+    }
+    setPendingItemId(null);
+    setConflictDetails(null);
   };
 
   if (!resolved && !notFound) {
@@ -133,6 +168,19 @@ export default function QrLanding() {
             )}
           </List>
         </Paper>
+        <ConfirmDialog
+          open={reassignConfirmOpen}
+          title="Reassign QR Tag"
+          message={`This QR tag is currently assigned to ${conflictDetails?.currentItemName || "another item"}. Reassign it?`}
+          onConfirm={handleReassign}
+          onCancel={() => {
+            setReassignConfirmOpen(false);
+            setConflictDetails(null);
+            setPendingItemId(null);
+          }}
+          confirmText="Reassign"
+          confirmColor="warning"
+        />
       </Container>
     );
   }

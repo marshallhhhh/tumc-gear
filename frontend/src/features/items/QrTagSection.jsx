@@ -21,7 +21,9 @@ export default function QrTagSection({ item, onUpdated }) {
   const [nanoidInput, setNanoidInput] = useState("");
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
+  const [reassignConfirmOpen, setReassignConfirmOpen] = useState(false);
   const [pendingNanoid, setPendingNanoid] = useState("");
+  const [conflictDetails, setConflictDetails] = useState(null);
 
   const appUrl = import.meta.env.VITE_APP_URL || "";
 
@@ -48,7 +50,38 @@ export default function QrTagSection({ item, onUpdated }) {
       setNanoidInput("");
       onUpdated?.();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to assign QR tag", "error");
+      if (err.response?.data?.error === "QR_ALREADY_ASSIGNED") {
+        setConflictDetails(err.response.data.details);
+        setReassignConfirmOpen(true);
+      } else {
+        notify(
+          err.response?.data?.message || "Failed to assign QR tag",
+          "error",
+        );
+      }
+    }
+  };
+
+  const handleReassign = async () => {
+    setReassignConfirmOpen(false);
+    try {
+      await assignQr.mutateAsync({
+        nanoid: pendingNanoid,
+        itemId: item.id,
+        force: true,
+        currentItemId: conflictDetails.currentItemId,
+      });
+      notify("QR tag reassigned", "success");
+      setPendingNanoid("");
+      setNanoidInput("");
+      setConflictDetails(null);
+      onUpdated?.();
+    } catch (err) {
+      notify(
+        err.response?.data?.message || "Failed to reassign QR tag",
+        "error",
+      );
+      setConflictDetails(null);
     }
   };
 
@@ -157,6 +190,19 @@ export default function QrTagSection({ item, onUpdated }) {
         message={`Remove the QR tag from ${item.name}? The tag will become unassigned.`}
         onConfirm={handleRemove}
         onCancel={() => setRemoveConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={reassignConfirmOpen}
+        title="Reassign QR Tag"
+        message={`This QR tag is currently assigned to ${conflictDetails?.currentItemName || "another item"}. Reassign it to ${item.name}?`}
+        onConfirm={handleReassign}
+        onCancel={() => {
+          setReassignConfirmOpen(false);
+          setConflictDetails(null);
+        }}
+        confirmText="Reassign"
+        confirmColor="warning"
       />
     </Box>
   );

@@ -29,7 +29,11 @@ export async function list(req, res, next) {
 
 export async function assign(req, res, next) {
   try {
-    const qrTag = await qrService.assignQrTag(req.body.nanoid, req.body.itemId);
+    const { nanoid, itemId, force, currentItemId } = req.body;
+    const qrTag = await qrService.assignQrTag(nanoid, itemId, {
+      force,
+      currentItemId,
+    });
     res.json(qrTag);
   } catch (err) {
     next(err);

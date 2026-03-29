@@ -16,10 +16,17 @@ const createSchema = z.object({
   nanoid: z.string().length(6),
 });
 
-const assignSchema = z.object({
-  nanoid: z.string().length(6),
-  itemId: z.uuid(),
-});
+const assignSchema = z
+  .object({
+    nanoid: z.string().length(6),
+    itemId: z.uuid(),
+    force: z.boolean().optional(),
+    currentItemId: z.uuid().optional(),
+  })
+  .refine((data) => !data.force || data.currentItemId, {
+    message: "currentItemId is required when force is true",
+    path: ["currentItemId"],
+  });
 
 const listQuerySchema = z
   .object({
