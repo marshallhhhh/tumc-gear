@@ -13,9 +13,10 @@ import {
   Paper,
   Checkbox,
   FormControlLabel,
-  CircularProgress,
   Alert,
+  CircularProgress
 } from "@mui/material";
+import { DetailSkeleton } from "../components/PageSkeleton";
 
 export default function ReportFound() {
   const [searchParams] = useSearchParams();
@@ -71,7 +72,7 @@ export default function ReportFound() {
   if (loadingItem) {
     return (
       <Container maxWidth="sm" sx={{ mt: 4 }}>
-        <CircularProgress />
+        <DetailSkeleton />
       </Container>
     );
   }

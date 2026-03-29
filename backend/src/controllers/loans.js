@@ -20,8 +20,8 @@ export async function list(req, res, next) {
 
 export async function overdue(req, res, next) {
   try {
-    const loans = await loanService.listOverdueLoans(req.query);
-    res.json(loans);
+    const result = await loanService.listOverdueLoans(req.query);
+    res.json(result);
   } catch (err) {
     next(err);
   }

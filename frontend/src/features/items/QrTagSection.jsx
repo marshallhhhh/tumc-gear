@@ -50,7 +50,10 @@ export default function QrTagSection({ item, onUpdated }) {
       setNanoidInput("");
       onUpdated?.();
     } catch (err) {
-      if (err.response?.data?.error === "QR_ALREADY_ASSIGNED") {
+      if (
+        err.response?.data?.error === "CONFLICT" &&
+        err.response?.data?.details?.currentItemId
+      ) {
         setConflictDetails(err.response.data.details);
         setReassignConfirmOpen(true);
       } else {

@@ -40,6 +40,10 @@ const listQuerySchema = z
 
 const overdueQuerySchema = z
   .object({
+    page: z.coerce.number().int().min(1).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    sortBy: z.enum(["dueDate", "createdAt", "checkoutDate"]).optional(),
+    sortOrder: z.enum(["asc", "desc"]).optional(),
     userId: z.uuid().optional(),
     itemId: z.uuid().optional(),
   })

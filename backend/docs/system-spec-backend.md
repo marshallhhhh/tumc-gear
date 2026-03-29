@@ -103,7 +103,6 @@ Track and manage climbing item inventory, including loans, QR code scanning, and
 
 - admin accesses a dashboard which shows
   - total number of items
-  - number of checked out items
   - number of open found reports
   - number of active loans
   - number of overdue loans
@@ -196,6 +195,7 @@ manual_indexes.sql
 - FoundReports can only be closed by Admins
 - Only admins can soft-delete items; users cannot delete items
 - Users can only view and return their own loans
+- Admins cannot return loans on behalf of users; they must use the cancel route instead (return vs cancel are kept as distinct actions)
 - Items cannot be deleted if they have an active loan
 - Loans: max 30 days (enforced on create/extend)
 - Category names are changeable, but prefix is immutable once set (collision handled by incrementing last letter)
@@ -396,7 +396,7 @@ Every response uses the most specific applicable code from this table. Do not in
 | ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 400  | Bad Request          | Zod validation failure, malformed JSON, missing required fields, invalid field values (e.g. `days` < 1 or > 30)                                                                                                       |
 | 401  | Unauthorized         | Missing or invalid/expired Bearer token, deleted or inactive user attempting auth                                                                                                                                     |
-| 403  | Forbidden            | Authenticated user lacks the required role for the endpoint (e.g. MEMBER hitting an ADMIN route), or user trying to return/extend another user's loan                                                                 |
+| 403  | Forbidden            | Authenticated user lacks the required role for the endpoint (e.g. MEMBER hitting an ADMIN route), user trying to return/extend another user's loan, or admin attempting to return a loan (admins must cancel instead) |
 | 404  | Not Found            | Resource does not exist or has been soft-deleted. Also: QR tag nanoid not found or not assigned to an item                                                                                                            |
 | 409  | Conflict             | Uniqueness violation: item already has an active loan, QR tag nanoid collision, duplicate category name/prefix, duplicate open found report for same item+reporter                                                    |
 | 422  | Unprocessable Entity | Request is well-formed but violates a business rule: item has active loan and cannot be deleted, category has items and cannot be deleted, loan extension would exceed 30-day max, item is not available for checkout |
@@ -455,7 +455,7 @@ POST /loans — MEMBER/ADMIN, create loan (body: { itemId, days, latitude, longi
 GET /loans — ADMIN only, paginated, filters: userId, itemId, status, overdue, sort by dueDate/status/createdAt/checkoutDate
 GET /loans/overdue — ADMIN only, filter: overdue
 GET /loans/my — MEMBER/ADMIN, current user's loans
-POST /loans/:id/return — MEMBER/ADMIN, return loan (body: { latitude, longitude })
+POST /loans/:id/return — MEMBER only, return own loan (body: { latitude, longitude }). Admins must use cancel instead.
 POST /loans/:id/cancel — ADMIN only, cancel loan
 PATCH /loans/:id/extend — MEMBER/ADMIN, extend loan (body: { days })
 

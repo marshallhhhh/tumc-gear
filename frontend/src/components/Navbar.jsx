@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   AppBar,
@@ -38,7 +38,6 @@ import {
 export default function Navbar() {
   const { isAuthenticated, isAdmin, user, signOut, loading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -82,7 +81,6 @@ export default function Navbar() {
         isAuthenticated={isAuthenticated}
         isAdmin={isAdmin}
         user={user}
-        location={location}
         navigate={navigate}
         onSignOut={handleSignOut}
         moreMenuAnchor={moreMenuAnchor}

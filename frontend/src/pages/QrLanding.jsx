@@ -62,7 +62,7 @@ export default function QrLanding() {
         }
       },
     });
-  }, [nanoid, authLoading]);
+  }, [nanoid, authLoading, resolved, isAdmin]);
 
   const handleAssign = async (itemId) => {
     try {
@@ -71,7 +71,10 @@ export default function QrLanding() {
       const item = itemsData?.data?.find((i) => i.id === itemId);
       navigate(`/admin/items/${item?.shortId || ""}`, { replace: true });
     } catch (err) {
-      if (err.response?.data?.error === "QR_ALREADY_ASSIGNED") {
+      if (
+        err.response?.data?.error === "CONFLICT" &&
+        err.response?.data?.details?.currentItemId
+      ) {
         setPendingItemId(itemId);
         setConflictDetails(err.response.data.details);
         setReassignConfirmOpen(true);

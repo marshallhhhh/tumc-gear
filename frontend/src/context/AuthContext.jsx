@@ -4,9 +4,11 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { supabase } from "../services/supabase";
-import api, { setAccessToken } from "../services/api";
+import { setAccessToken } from "../services/api";
+import { getMe } from "../services/users";
 
 const AuthContext = createContext(null);
 
@@ -14,16 +16,18 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
-  const fetchUser = useCallback(async () => {
-    setLoading(true);
+  const fetchUser = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
-      const { data } = await api.get("/users/me");
+      const data = await getMe();
       setUser(data);
     } catch {
       setUser(null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
+      initialLoadDone.current = true;
     }
   }, []);
 
@@ -36,6 +40,7 @@ export function AuthProvider({ children }) {
       } else {
         setUser(null);
         setLoading(false);
+        initialLoadDone.current = true;
       }
     });
 
@@ -45,7 +50,7 @@ export function AuthProvider({ children }) {
       setSession(s);
       setAccessToken(s?.access_token ?? null);
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await fetchUser();
+        await fetchUser({ silent: initialLoadDone.current });
       } else if (event === "SIGNED_OUT") {
         setLoading(false);
         setUser(null);

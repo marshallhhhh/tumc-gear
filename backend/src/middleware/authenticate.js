@@ -33,15 +33,18 @@ export async function authenticate(req, _res, next) {
     const email = payload.email;
     const fullName = payload.user_metadata?.full_name;
 
-    if (!fullName) {
-      return next(
-        new AppError(401, "UNAUTHORIZED", "User profile is incomplete - full name is required.")
-      );
-    }
-
     let user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
+      if (!fullName) {
+        return next(
+          new AppError(
+            403,
+            "PROFILE_INCOMPLETE",
+            "User profile is incomplete - full name is required.",
+          ),
+        );
+      }
       user = await prisma.user.create({
         data: {
           id: userId,
