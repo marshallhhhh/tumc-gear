@@ -77,7 +77,9 @@ export default function QrLanding() {
         setReassignConfirmOpen(true);
       } else {
         notify(
-          err.response?.data?.message || "Failed to assign QR tag",
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to assign QR tag",
           "error",
         );
       }
@@ -98,7 +100,9 @@ export default function QrLanding() {
       navigate(`/admin/items/${item?.shortId || ""}`, { replace: true });
     } catch (err) {
       notify(
-        err.response?.data?.message || "Failed to reassign QR tag",
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to reassign QR tag",
         "error",
       );
     }

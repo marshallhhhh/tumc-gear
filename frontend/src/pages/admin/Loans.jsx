@@ -63,7 +63,10 @@ export default function Loans() {
       notify("Loan cancelled", "success");
       setSelectedLoan(null);
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to cancel loan", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to cancel loan",
+        "error",
+      );
     }
   };
 

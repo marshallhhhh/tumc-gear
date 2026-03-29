@@ -36,7 +36,10 @@ export default function UserDetailModal({ user, open, onClose }) {
       notify(`User role changed to ${newRole}`, "success");
       onClose();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to update role", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to update role",
+        "error",
+      );
     }
   };
 
@@ -50,7 +53,10 @@ export default function UserDetailModal({ user, open, onClose }) {
       notify(user.isActive ? "User deactivated" : "User activated", "success");
       onClose();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to update user", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to update user",
+        "error",
+      );
     }
   };
 
@@ -61,7 +67,10 @@ export default function UserDetailModal({ user, open, onClose }) {
       notify("User deleted", "success");
       onClose();
     } catch (err) {
-      notify(err.response?.data?.message || "Failed to delete user", "error");
+      notify(
+        err.response?.data?.message || err.message || "Failed to delete user",
+        "error",
+      );
     }
   };
 

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useNotification } from "../context/NotificationContext";
 import { useCreateFoundReport } from "../hooks/useFoundReports";
-import { getItemById } from "../services/items";
+import { useItem } from "../hooks/useItems";
 import { useGeolocation } from "../hooks/useGeolocation";
 import {
   Container,
@@ -23,25 +23,13 @@ export default function ReportFound() {
   const navigate = useNavigate();
   const { notify } = useNotification();
 
-  const [item, setItem] = useState(null);
-  const [loadingItem, setLoadingItem] = useState(true);
   const [contactInfo, setContactInfo] = useState("");
   const [description, setDescription] = useState("");
   const [shareLocation, setShareLocation] = useState(false);
 
+  const { data: item, isLoading: loadingItem } = useItem(itemId);
   const createReport = useCreateFoundReport();
   const { getLocation } = useGeolocation();
-
-  useEffect(() => {
-    if (!itemId) {
-      setLoadingItem(false);
-      return;
-    }
-    getItemById(itemId)
-      .then(setItem)
-      .catch(() => setItem(null))
-      .finally(() => setLoadingItem(false));
-  }, [itemId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,7 +59,9 @@ export default function ReportFound() {
         notify("A report for this item has already been filed", "error");
       } else {
         notify(
-          err.response?.data?.message || "Failed to submit report",
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to submit report",
           "error",
         );
       }
@@ -102,10 +92,10 @@ export default function ReportFound() {
       <Typography variant="h6" gutterBottom>
         You found our gear!
       </Typography>
-      <Typography variant="body2" color="textSecondary">
+      <Typography variant="body2" color="text.secondary">
         Please fill in the form below to let us know how we can get it back.
       </Typography>
-      <Typography variant="body2" color="textSecondary" marginY={1}>
+      <Typography variant="body2" color="text.secondary" marginY={1}>
         Alternatively you can contact us directly at{" "}
         <a href="mailto:tasuniclimbing@gmail.com">tasuniclimbing@gmail.com</a>.
         Or call the Tasmanian University Student Association (TUSA) at{" "}
@@ -123,7 +113,7 @@ export default function ReportFound() {
             margin="normal"
             value={contactInfo}
             onChange={(e) => setContactInfo(e.target.value)}
-            inputProps={{ maxLength: 500 }}
+            slotProps={{ htmlInput: { maxLength: 500 } }}
             helperText="Optional — how can we reach you?"
           />
           <TextField
@@ -134,7 +124,7 @@ export default function ReportFound() {
             margin="normal"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            inputProps={{ maxLength: 2000 }}
+            slotProps={{ htmlInput: { maxLength: 2000 } }}
           />
           <FormControlLabel
             control={
