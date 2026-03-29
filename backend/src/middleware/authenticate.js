@@ -1,11 +1,8 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { jwtVerify } from "jose";
 import { env } from "../config/env.js";
+import { JWKS } from "../config/jwks.js";
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
-
-const JWKS = createRemoteJWKSet(
-  new URL(`${env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
-);
 
 export async function authenticate(req, _res, next) {
   const authHeader = req.headers.authorization;
@@ -34,7 +31,13 @@ export async function authenticate(req, _res, next) {
   try {
     const userId = payload.sub;
     const email = payload.email;
-    const fullName = payload.user_metadata?.full_name || null;
+    const fullName = payload.user_metadata?.full_name;
+
+    if (!fullName) {
+      return next(
+        new AppError(401, "UNAUTHORIZED", "User profile is incomplete - full name is required.")
+      );
+    }
 
     let user = await prisma.user.findUnique({ where: { id: userId } });
 
