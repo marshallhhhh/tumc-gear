@@ -11,7 +11,7 @@ export async function resolveQr(nanoid) {
     include: { item: { include: { category: true } } },
   });
 
-  if (!qrTag || !qrTag.item) {
+  if (!qrTag || !qrTag.item || qrTag.item.deletedAt) {
     throw new AppError(
       404,
       "NOT_FOUND",

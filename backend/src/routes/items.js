@@ -22,11 +22,12 @@ const updateSchema = z.object({
   serialNumber: z.string().max(100).nullable().optional(),
 });
 
-const getQuerySchema = z.object({
-  includeLoans: z.enum(["true", "false"]).optional(),
-  includeFoundReports: z.enum(["true", "false"]).optional(),
-})
-.strict();
+const getQuerySchema = z
+  .object({
+    includeLoans: z.enum(["true", "false"]).optional(),
+    includeFoundReports: z.enum(["true", "false"]).optional(),
+  })
+  .strict();
 
 const listQuerySchema = z
   .object({

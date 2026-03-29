@@ -109,7 +109,21 @@ export async function listLoans(query) {
 }
 
 export async function listOverdueLoans(query) {
-  const { userId, itemId } = query;
+  const { page, pageSize, sortBy, sortOrder, userId, itemId } = query;
+
+  const {
+    skip,
+    take,
+    orderBy,
+    page: p,
+    pageSize: ps,
+  } = buildPaginationQuery({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    allowedSortFields: ["dueDate", "createdAt", "checkoutDate"],
+  });
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -121,14 +135,21 @@ export async function listOverdueLoans(query) {
   if (userId) where.userId = userId;
   if (itemId) where.itemId = itemId;
 
-  return prisma.loan.findMany({
-    where,
-    orderBy: { dueDate: "asc" },
-    include: {
-      item: true,
-      user: { select: { id: true, email: true, fullName: true } },
-    },
-  });
+  const [loans, totalCount] = await Promise.all([
+    prisma.loan.findMany({
+      where,
+      skip,
+      take,
+      orderBy: orderBy || { dueDate: "asc" },
+      include: {
+        item: true,
+        user: { select: { id: true, email: true, fullName: true } },
+      },
+    }),
+    prisma.loan.count({ where }),
+  ]);
+
+  return { data: loans, ...buildPaginationMeta(p, ps, totalCount) };
 }
 
 export async function getMyLoans(userId, query = {}) {

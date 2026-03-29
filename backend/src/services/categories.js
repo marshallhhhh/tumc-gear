@@ -58,18 +58,20 @@ export async function updateCategory(id, data) {
     throw new AppError(404, "NOT_FOUND", "Category not found.");
   }
 
-  const duplicate = await prisma.category.findFirst({
-    where: { name: data.name, id: { not: id } },
-  });
-  if (duplicate) {
-    throw new AppError(
-      409,
-      "CONFLICT",
-      "A category with this name already exists.",
-    );
+  if (data.name) {
+    const duplicate = await prisma.category.findFirst({
+      where: { name: data.name, id: { not: id } },
+    });
+    if (duplicate) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "A category with this name already exists.",
+      );
+    }
+    return prisma.category.update({ where: { id }, data: { name: data.name } });
   }
-
-  return prisma.category.update({ where: { id }, data: { name: data.name } });
+  return category;
 }
 
 export async function deleteCategory(id) {
