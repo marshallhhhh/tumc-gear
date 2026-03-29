@@ -32,10 +32,6 @@ async function generateShortId(categoryId) {
 }
 
 export async function createItem(data) {
-  if (!data.categoryId) {
-    throw new AppError(400, "BAD_REQUEST", "categoryId is required.");
-  }
-
   const shortId = await generateShortId(data.categoryId);
 
   return prisma.item.create({
@@ -128,7 +124,15 @@ export async function updateItem(id, data) {
   if (data.description !== undefined) updateData.description = data.description;
   if (data.serialNumber !== undefined)
     updateData.serialNumber = data.serialNumber;
-  if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+  if (data.categoryId !== undefined) {
+    const category = await prisma.category.findUnique({
+      where: { id: data.categoryId },
+    });
+    if (!category) {
+      throw new AppError(404, "NOT_FOUND", "Category not found.");
+    }
+    updateData.categoryId = data.categoryId;
+  }
 
   return prisma.item.update({
     where: { id },
