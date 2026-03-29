@@ -168,4 +168,4 @@ Prisma auto-filters `deletedAt IS NULL` on all queries. To include deleted recor
 
 ## API Reference
 
-See [backend/docs/system-spec-backend.md](../../docs/system-spec-backend.md) for full endpoint reference, business rules, error codes, and response shapes.
+See [backend/docs/system-spec-backend.md](../../backend/docs/system-spec-backend.md) for full endpoint reference, business rules, error codes, and response shapes.

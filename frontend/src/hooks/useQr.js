@@ -20,7 +20,8 @@ export function useCreateQr() {
 export function useAssignQr() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ nanoid, itemId }) => qrApi.assignQr(nanoid, itemId),
+    mutationFn: ({ nanoid, itemId, force, currentItemId }) =>
+      qrApi.assignQr(nanoid, itemId, { force, currentItemId }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["qrTags"] });
       qc.invalidateQueries({ queryKey: ["items"] });

@@ -73,7 +73,11 @@ export async function listQrTags(query) {
   return { data: qrTags, ...buildPaginationMeta(p, ps, totalCount) };
 }
 
-export async function assignQrTag(nanoid, itemId) {
+export async function assignQrTag(
+  nanoid,
+  itemId,
+  { force = false, currentItemId = null } = {},
+) {
   const item = await prisma.item.findUnique({ where: { id: itemId } });
   if (!item) {
     throw new AppError(404, "NOT_FOUND", "Item not found.");
@@ -91,17 +95,42 @@ export async function assignQrTag(nanoid, itemId) {
 
   return prisma.$transaction(async (tx) => {
     // Find or create the QR tag
-    let qrTag = await tx.qrTag.findUnique({ where: { nanoid } });
+    let qrTag = await tx.qrTag.findUnique({
+      where: { nanoid },
+      include: { item: true },
+    });
     if (!qrTag) {
       qrTag = await tx.qrTag.create({ data: { nanoid } });
     }
 
-    // If already assigned to another item, unassign first
-    if (qrTag.itemId) {
-      await tx.qrTag.update({
-        where: { id: qrTag.id },
-        data: { itemId: null },
-      });
+    // If QR tag is already assigned to another item
+    if (qrTag.itemId && qrTag.itemId !== itemId) {
+      if (!force) {
+        throw new AppError(
+          409,
+          "QR_ALREADY_ASSIGNED",
+          "QR tag is already assigned to another item.",
+          {
+            currentItemId: qrTag.itemId,
+            currentItemName: qrTag.item?.name,
+            currentItemShortId: qrTag.item?.shortId,
+          },
+        );
+      }
+
+      // Optimistic concurrency: verify assignment hasn't changed
+      if (currentItemId && qrTag.itemId !== currentItemId) {
+        throw new AppError(
+          409,
+          "CONFLICT",
+          "QR tag assignment has changed since you last checked.",
+          {
+            currentItemId: qrTag.itemId,
+            currentItemName: qrTag.item?.name,
+            currentItemShortId: qrTag.item?.shortId,
+          },
+        );
+      }
     }
 
     return tx.qrTag.update({
