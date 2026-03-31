@@ -88,7 +88,8 @@ export async function listLoans(query) {
     where.status = "ACTIVE";
     where.dueDate = { lt: startOfToday };
   } else if (status) {
-    where.status = status;
+    const statuses = Array.isArray(status) ? status : status.split(",");
+    where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
   }
 
   const [loans, totalCount] = await Promise.all([
@@ -170,7 +171,10 @@ export async function getMyLoans(userId, query = {}) {
   });
 
   const where = { userId };
-  if (status) where.status = status;
+  if (status) {
+    const statuses = Array.isArray(status) ? status : status.split(",");
+    where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
+  }
 
   const [loans, totalCount] = await Promise.all([
     prisma.loan.findMany({
@@ -187,96 +191,164 @@ export async function getMyLoans(userId, query = {}) {
 }
 
 export async function returnLoan(loanId, userId, data) {
-  const loan = await prisma.loan.findUnique({ where: { id: loanId } });
-  if (!loan) {
-    throw new AppError(404, "NOT_FOUND", "Loan not found.");
-  }
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const loan = await tx.loan.findUnique({ where: { id: loanId } });
+        if (!loan) {
+          throw new AppError(404, "NOT_FOUND", "Loan not found.");
+        }
 
-  if (loan.userId !== userId) {
-    throw new AppError(403, "FORBIDDEN", "You can only return your own loans.");
-  }
+        if (loan.userId !== userId) {
+          throw new AppError(
+            403,
+            "FORBIDDEN",
+            "You can only return your own loans.",
+          );
+        }
 
-  if (loan.status !== "ACTIVE") {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "Only active loans can be returned.",
+        if (loan.status !== "ACTIVE") {
+          throw new AppError(
+            422,
+            "UNPROCESSABLE_ENTITY",
+            "Only active loans can be returned.",
+          );
+        }
+
+        return tx.loan.update({
+          where: { id: loanId },
+          data: {
+            status: "RETURNED",
+            returnDate: new Date(),
+            closedLatitude: data.latitude,
+            closedLongitude: data.longitude,
+          },
+          include: { item: true },
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2034"
+    ) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "Concurrent update detected. Please retry.",
+      );
+    }
+    throw err;
   }
-
-  return prisma.loan.update({
-    where: { id: loanId },
-    data: {
-      status: "RETURNED",
-      returnDate: new Date(),
-      closedLatitude: data.latitude,
-      closedLongitude: data.longitude,
-    },
-    include: { item: true },
-  });
 }
 
 export async function cancelLoan(loanId, adminId) {
-  const loan = await prisma.loan.findUnique({ where: { id: loanId } });
-  if (!loan) {
-    throw new AppError(404, "NOT_FOUND", "Loan not found.");
-  }
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const loan = await tx.loan.findUnique({ where: { id: loanId } });
+        if (!loan) {
+          throw new AppError(404, "NOT_FOUND", "Loan not found.");
+        }
 
-  if (loan.status !== "ACTIVE") {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "Only active loans can be cancelled.",
+        if (loan.status !== "ACTIVE") {
+          throw new AppError(
+            422,
+            "UNPROCESSABLE_ENTITY",
+            "Only active loans can be cancelled.",
+          );
+        }
+
+        return tx.loan.update({
+          where: { id: loanId },
+          data: {
+            status: "CANCELLED",
+            cancelledBy: adminId,
+            cancelledAt: new Date(),
+          },
+          include: { item: true },
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2034"
+    ) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "Concurrent update detected. Please retry.",
+      );
+    }
+    throw err;
   }
-
-  return prisma.loan.update({
-    where: { id: loanId },
-    data: {
-      status: "CANCELLED",
-      cancelledBy: adminId,
-      cancelledAt: new Date(),
-    },
-    include: { item: true },
-  });
 }
 
 export async function extendLoan(loanId, userId, data, isAdmin = false) {
-  const loan = await prisma.loan.findUnique({ where: { id: loanId } });
-  if (!loan) {
-    throw new AppError(404, "NOT_FOUND", "Loan not found.");
-  }
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const loan = await tx.loan.findUnique({ where: { id: loanId } });
+        if (!loan) {
+          throw new AppError(404, "NOT_FOUND", "Loan not found.");
+        }
 
-  if (!isAdmin && loan.userId !== userId) {
-    throw new AppError(403, "FORBIDDEN", "You can only extend your own loans.");
-  }
+        if (!isAdmin && loan.userId !== userId) {
+          throw new AppError(
+            403,
+            "FORBIDDEN",
+            "You can only extend your own loans.",
+          );
+        }
 
-  if (loan.status !== "ACTIVE") {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "Only active loans can be extended.",
+        if (loan.status !== "ACTIVE") {
+          throw new AppError(
+            422,
+            "UNPROCESSABLE_ENTITY",
+            "Only active loans can be extended.",
+          );
+        }
+
+        // Calculate total duration from checkout to proposed new due date
+        const newDueDate = new Date(loan.dueDate);
+        newDueDate.setDate(newDueDate.getDate() + data.days);
+
+        const maxDueDate = new Date(loan.checkoutDate);
+        maxDueDate.setDate(maxDueDate.getDate() + 30);
+
+        if (newDueDate > maxDueDate) {
+          throw new AppError(
+            422,
+            "UNPROCESSABLE_ENTITY",
+            "Loan extension would exceed the 30-day maximum.",
+          );
+        }
+
+        return tx.loan.update({
+          where: { id: loanId },
+          data: { dueDate: newDueDate },
+          include: { item: true },
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2034"
+    ) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "Concurrent update detected. Please retry.",
+      );
+    }
+    throw err;
   }
-
-  // Calculate total duration from checkout to proposed new due date
-  const newDueDate = new Date(loan.dueDate);
-  newDueDate.setDate(newDueDate.getDate() + data.days);
-
-  const maxDueDate = new Date(loan.checkoutDate);
-  maxDueDate.setDate(maxDueDate.getDate() + 30);
-
-  if (newDueDate > maxDueDate) {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "Loan extension would exceed the 30-day maximum.",
-    );
-  }
-
-  return prisma.loan.update({
-    where: { id: loanId },
-    data: { dueDate: newDueDate },
-    include: { item: true },
-  });
 }

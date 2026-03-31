@@ -80,7 +80,6 @@ export default function Navbar() {
       <MobileNav
         isAuthenticated={isAuthenticated}
         isAdmin={isAdmin}
-        user={user}
         navigate={navigate}
         onSignOut={handleSignOut}
         moreMenuAnchor={moreMenuAnchor}

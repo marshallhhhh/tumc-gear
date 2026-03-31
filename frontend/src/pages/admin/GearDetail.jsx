@@ -260,10 +260,7 @@ export default function GearDetail() {
       <EditGearDialog
         item={item}
         open={editOpen}
-        onClose={() => {
-          setEditOpen(false);
-          refetch();
-        }}
+        onClose={() => setEditOpen(false)}
       />
 
       <ConfirmDialog
@@ -277,10 +274,7 @@ export default function GearDetail() {
       <LoanDetailModal
         loan={loanModal}
         open={!!loanModal}
-        onClose={() => {
-          setLoanModal(null);
-          refetch();
-        }}
+        onClose={() => setLoanModal(null)}
         showAdminActions
       />
     </Container>

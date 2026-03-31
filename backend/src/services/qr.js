@@ -83,17 +83,16 @@ export async function assignQrTag(
     throw new AppError(404, "NOT_FOUND", "Item not found.");
   }
 
-  // Check if item already has a QR tag
-  const existingTag = await prisma.qrTag.findUnique({ where: { itemId } });
-  if (existingTag) {
-    throw new AppError(
-      409,
-      "CONFLICT",
-      "This item already has a QR tag assigned.",
-    );
-  }
-
   return prisma.$transaction(async (tx) => {
+    const existingTag = await tx.qrTag.findUnique({ where: { itemId } });
+    if (existingTag) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "This item already has a QR tag assigned.",
+      );
+    }
+
     // Find or create the QR tag
     let qrTag = await tx.qrTag.findUnique({
       where: { nanoid },

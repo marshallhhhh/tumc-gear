@@ -2,8 +2,10 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
+import { swaggerSpec } from "./config/swagger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./routes/index.js";
 
@@ -17,6 +19,8 @@ app.use(
   }),
 );
 app.use(express.json());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(router);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
@@ -33,6 +33,13 @@ export default function QrLanding() {
   const [conflictDetails, setConflictDetails] = useState(null);
   const [pendingItemId, setPendingItemId] = useState(null);
 
+  // Refs for values used inside the effect that change identity each render
+  const resolveQrRef = useRef(resolveQr);
+  resolveQrRef.current = resolveQr;
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const attemptedRef = useRef(false);
+
   // Items for admin assignment
   const { data: itemsData } = useItems(
     { search: searchTerm, pageSize: 20 },
@@ -42,14 +49,15 @@ export default function QrLanding() {
   const assignQr = useAssignQr();
 
   useEffect(() => {
-    if (authLoading || resolved) return;
+    if (authLoading || attemptedRef.current) return;
+    attemptedRef.current = true;
 
-    resolveQr.mutate(nanoid, {
+    resolveQrRef.current.mutate(nanoid, {
       onSuccess: (data) => {
         setResolved(true);
-        navigate(`/item/${data.shortId}`, { replace: true });
+        navigateRef.current(`/item/${data.shortId}`, { replace: true });
       },
-      onError: async (err) => {
+      onError: (err) => {
         if (err.response?.status === 404) {
           setResolved(true);
           if (isAdmin) {
@@ -62,7 +70,7 @@ export default function QrLanding() {
         }
       },
     });
-  }, [nanoid, authLoading, resolved, isAdmin]);
+  }, [nanoid, authLoading, isAdmin]);
 
   const handleAssign = async (itemId) => {
     try {
