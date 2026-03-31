@@ -19,7 +19,7 @@ import {
 import { CardsSkeleton } from "../../components/PageSkeleton";
 import theme from "../../theme";
 
-const defaultColor = "#647088";
+const defaultColor = theme.palette.text.secondary;
 const alertColor = theme.palette.error.main;
 const alertKeys = new Set(["openFoundReports", "overdueLoans"]);
 const notifyKeys = new Set(["activeLoans"]);

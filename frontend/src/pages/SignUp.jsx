@@ -10,6 +10,7 @@ import {
   Link,
   Paper,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 
 const NAME_REGEX = /^[a-zA-Z\s\-'.]+$/;
@@ -140,9 +141,9 @@ export default function SignUp() {
               autoComplete="new-password"
             />
             {error && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              <Alert severity="error" sx={{ mt: 1 }}>
                 {error}
-              </Typography>
+              </Alert>
             )}
             <Button
               type="submit"

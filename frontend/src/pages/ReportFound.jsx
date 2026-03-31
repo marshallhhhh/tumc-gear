@@ -14,7 +14,7 @@ import {
   Checkbox,
   FormControlLabel,
   Alert,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import { DetailSkeleton } from "../components/PageSkeleton";
 

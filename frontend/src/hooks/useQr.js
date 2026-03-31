@@ -7,16 +7,6 @@ export function useResolveQr() {
   });
 }
 
-export function useCreateQr() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: qrApi.createQr,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["qrTags"] });
-    },
-  });
-}
-
 export function useAssignQr() {
   const qc = useQueryClient();
   return useMutation({

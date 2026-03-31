@@ -35,6 +35,7 @@ async function generatePrefix(name) {
 export async function createCategory(data) {
   const existing = await prisma.category.findFirst({
     where: { name: data.name },
+    includeDeleted: true,
   });
   if (existing) {
     throw new AppError(
@@ -61,6 +62,7 @@ export async function updateCategory(id, data) {
   if (data.name) {
     const duplicate = await prisma.category.findFirst({
       where: { name: data.name, id: { not: id } },
+      includeDeleted: true,
     });
     if (duplicate) {
       throw new AppError(

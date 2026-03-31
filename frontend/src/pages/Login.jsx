@@ -11,6 +11,7 @@ import {
   Link,
   Paper,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 
 export default function Login() {
@@ -127,9 +128,9 @@ export default function Login() {
               </Link>
             </Box>
             {error && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              <Alert severity="error" sx={{ mt: 1 }}>
                 {error}
-              </Typography>
+              </Alert>
             )}
             <Button
               type="submit"
