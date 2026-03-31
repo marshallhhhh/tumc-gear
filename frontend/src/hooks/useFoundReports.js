@@ -37,6 +37,7 @@ export function useCloseFoundReport() {
       qc.invalidateQueries({ queryKey: ["foundReports"] });
       qc.invalidateQueries({ queryKey: ["foundReport"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["item"] });
     },
   });
 }

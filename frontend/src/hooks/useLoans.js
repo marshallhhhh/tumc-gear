@@ -62,6 +62,8 @@ export function useExtendLoan() {
     mutationFn: ({ id, data }) => loansApi.extendLoan(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loans"] });
+      qc.invalidateQueries({ queryKey: ["items"] });
+      qc.invalidateQueries({ queryKey: ["item"] });
     },
   });
 }

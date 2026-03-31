@@ -85,6 +85,7 @@ export async function updateUser(id, data, adminId) {
   if (data.email !== undefined && data.email !== user.email) {
     const existing = await prisma.user.findUnique({
       where: { email: data.email },
+      includeDeleted: true,
     });
     if (existing) {
       throw new AppError(409, "CONFLICT", "Email is already in use.");

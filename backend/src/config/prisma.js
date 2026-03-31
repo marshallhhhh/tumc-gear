@@ -32,15 +32,12 @@ export const prisma = basePrisma.$extends({
       },
       async findUnique({ model, args, query }) {
         if (softDeleteModels.includes(model) && !args.includeDeleted) {
-          // findUnique doesn't support arbitrary where filters, so switch to findFirst
-          const { where, ...rest } = args;
-          delete rest.includeDeleted;
-          return basePrisma[
-            model.charAt(0).toLowerCase() + model.slice(1)
-          ].findFirst({
-            ...rest,
-            where: { ...where, deletedAt: null },
-          });
+          delete args.includeDeleted;
+          // Run through query() to preserve $transaction context,
+          // then filter soft-deleted records in JS since findUnique
+          // doesn't support arbitrary where filters like deletedAt.
+          const result = await query(args);
+          return result?.deletedAt != null ? null : result;
         }
         delete args.includeDeleted;
         return query(args);

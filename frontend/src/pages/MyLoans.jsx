@@ -9,6 +9,8 @@ import {
   Tabs,
   Tab,
   TablePagination,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { Assignment as LoansIcon } from "@mui/icons-material";
 import StatusBadge from "../components/StatusBadge";
@@ -18,10 +20,9 @@ import LoanDetailModal from "../features/loans/LoanDetailModal";
 import { formatDate } from "../utils/date";
 
 const STATUS_TABS = [
-  { label: "All", value: undefined },
   { label: "Active", value: "ACTIVE" },
-  { label: "Returned", value: "RETURNED" },
-  { label: "Cancelled", value: "CANCELLED" },
+  { label: "All", value: undefined },
+  { label: "Closed", value: "RETURNED,CANCELLED" },
 ];
 
 const isOverdue = (loan) =>
@@ -44,6 +45,9 @@ export default function MyLoans() {
   const { data, isLoading } = useMyLoans(queryParams);
   const loans = data?.data || [];
 
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+
   const handleTabChange = (_e, newTab) => {
     setTab(newTab);
     setPage(0);
@@ -62,7 +66,12 @@ export default function MyLoans() {
         My Loans
       </Typography>
 
-      <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2 }}>
+      <Tabs
+        variant={isSmall ? "fullWidth" : "centered"}
+        value={tab}
+        onChange={handleTabChange}
+        sx={{ mb: 2 }}
+      >
         {STATUS_TABS.map((t) => (
           <Tab key={t.label} label={t.label} />
         ))}
