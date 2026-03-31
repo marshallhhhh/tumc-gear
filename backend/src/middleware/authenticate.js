@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { jwtVerify } from "jose";
 import { env } from "../config/env.js";
 import { JWKS } from "../config/jwks.js";
@@ -33,7 +34,10 @@ export async function authenticate(req, _res, next) {
     const email = payload.email;
     const fullName = payload.user_metadata?.full_name;
 
-    let user = await prisma.user.findUnique({ where: { id: userId } });
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
+      includeDeleted: true,
+    });
 
     if (!user) {
       if (!fullName) {
@@ -45,13 +49,25 @@ export async function authenticate(req, _res, next) {
           ),
         );
       }
-      user = await prisma.user.create({
-        data: {
-          id: userId,
-          email,
-          fullName,
-        },
-      });
+      try {
+        user = await prisma.user.create({
+          data: {
+            id: userId,
+            email,
+            fullName,
+          },
+        });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === "P2002"
+        ) {
+          // Concurrent request already created this user — re-fetch
+          user = await prisma.user.findUnique({ where: { id: userId } });
+        } else {
+          throw err;
+        }
+      }
     }
 
     if (user.deletedAt || !user.isActive) {

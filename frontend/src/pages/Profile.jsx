@@ -56,7 +56,12 @@ export default function Profile() {
       await resetPassword(user.email);
       notify("Check your email for a password reset link", "success");
     } catch (err) {
-      notify(err.message || "Failed to send reset email", "error");
+      notify(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to send reset email",
+        "error",
+      );
     }
   };
 

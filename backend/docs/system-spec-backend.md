@@ -194,8 +194,8 @@ manual_indexes.sql
 - shortId is auto-generated: `{PREFIX}-{###}` (category prefix, sequential number, 3+ digits)
 - FoundReports can only be closed by Admins
 - Only admins can soft-delete items; users cannot delete items
-- Users can only view and return their own loans
-- Admins cannot return loans on behalf of users; they must use the cancel route instead (return vs cancel are kept as distinct actions)
+- Users (both MEMBERs and ADMINs) can only return their own loans — the service layer enforces `loan.userId === requestingUserId` regardless of role
+- To override another user's loan, admins must use the cancel route instead (return vs cancel are kept as distinct actions for auditability)
 - Items cannot be deleted if they have an active loan
 - Loans: max 30 days (enforced on create/extend)
 - Category names are changeable, but prefix is immutable once set (collision handled by incrementing last letter)
@@ -230,15 +230,16 @@ MEMBER
 - View item
 - Scan QR code
 - Loan item
-- Return Item
+- Return own loan
 - View Own Loans
 
 ADMIN
 
+- All MEMBER permissions (including returning own loans)
 - Create/Update/Delete Item
 - Assign/Unassign QR tags
 - Close FoundReports
-- Override Loans
+- Cancel (override) any user's loan
 - View All Loans
 
 # Schema outline
@@ -392,15 +393,15 @@ Every response uses the most specific applicable code from this table. Do not in
 
 ### Client Errors
 
-| Code | Meaning              | When to use                                                                                                                                                                                                           |
-| ---- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 400  | Bad Request          | Zod validation failure, malformed JSON, missing required fields, invalid field values (e.g. `days` < 1 or > 30)                                                                                                       |
-| 401  | Unauthorized         | Missing or invalid/expired Bearer token, deleted or inactive user attempting auth                                                                                                                                     |
-| 403  | Forbidden            | Authenticated user lacks the required role for the endpoint (e.g. MEMBER hitting an ADMIN route), user trying to return/extend another user's loan, or admin attempting to return a loan (admins must cancel instead) |
-| 404  | Not Found            | Resource does not exist or has been soft-deleted. Also: QR tag nanoid not found or not assigned to an item                                                                                                            |
-| 409  | Conflict             | Uniqueness violation: item already has an active loan, QR tag nanoid collision, duplicate category name/prefix, duplicate open found report for same item+reporter                                                    |
-| 422  | Unprocessable Entity | Request is well-formed but violates a business rule: item has active loan and cannot be deleted, category has items and cannot be deleted, loan extension would exceed 30-day max, item is not available for checkout |
-| 429  | Too Many Requests    | Rate limit exceeded on public endpoints                                                                                                                                                                               |
+| Code | Meaning              | When to use                                                                                                                                                                                                                                                                                                               |
+| ---- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 400  | Bad Request          | Zod validation failure, malformed JSON, missing required fields, invalid field values (e.g. `days` < 1 or > 30)                                                                                                                                                                                                           |
+| 401  | Unauthorized         | Missing or invalid/expired Bearer token, deleted or inactive user attempting auth                                                                                                                                                                                                                                         |
+| 403  | Forbidden            | Authenticated user lacks the required role for the endpoint (e.g. MEMBER hitting an ADMIN route), or user (of any role) trying to return another user's loan, or a non-admin trying to extend another user's loan                                                                                                         |
+| 404  | Not Found            | Resource does not exist or has been soft-deleted. Also: QR tag nanoid not found or not assigned to an item                                                                                                                                                                                                                |
+| 409  | Conflict             | Uniqueness violation: item already has an active loan, QR tag nanoid collision, duplicate category name/prefix, duplicate open found report for same item+reporter. Also `QR_ALREADY_ASSIGNED` when a QR tag is already linked to another item (details include `currentItemId`, `currentItemName`, `currentItemShortId`) |
+| 422  | Unprocessable Entity | Request is well-formed but violates a business rule: item has active loan and cannot be deleted, category has items and cannot be deleted, loan extension would exceed 30-day max, item is not available for checkout                                                                                                     |
+| 429  | Too Many Requests    | Rate limit exceeded on public endpoints                                                                                                                                                                                                                                                                                   |
 
 ### Server Errors
 
@@ -443,8 +444,7 @@ All error responses (4xx, 5xx) use the same envelope:
 ## Items
 
 POST /item — ADMIN only, create item (auto shortId)
-GET /item/:id — public (optional auth), returns item; authenticated non-admin users get `activeLoan`; admins get `loans[]` (with user) and `foundReports[]` (with reporter, closedByAdmin)
-GET /item/by-short-id/:shortId — public (optional auth), returns item by shortId; same response tiers as GET /item/:id
+GET /item/:id — public (optional auth); `:id` accepts either a UUID or a shortId (e.g. `AUD-001`) — the service auto-detects the format. Returns item; authenticated non-admin users get `activeLoan`; admins may opt-in to `loans[]` (with user) via `?includeLoans=true` and `foundReports[]` (with reporter, closedByAdmin) via `?includeFoundReports=true`
 PATCH /item/:id — ADMIN only, update item
 DELETE /item/:id — ADMIN only, soft-delete (blocked if active loan)
 GET /items — ADMIN only, paginated, filters: category, hasLoan, hasQrTag, search, sort by category/name/createdAt/updatedAt; response includes `hasActiveLoan` boolean per item
@@ -455,16 +455,16 @@ POST /loans — MEMBER/ADMIN, create loan (body: { itemId, days, latitude, longi
 GET /loans — ADMIN only, paginated, filters: userId, itemId, status, overdue, sort by dueDate/status/createdAt/checkoutDate
 GET /loans/overdue — ADMIN only, filter: overdue
 GET /loans/my — MEMBER/ADMIN, current user's loans
-POST /loans/:id/return — MEMBER only, return own loan (body: { latitude, longitude }). Admins must use cancel instead.
+POST /loans/:id/return — MEMBER/ADMIN, return own loan (body: { latitude, longitude }). Only the loan's borrower can return it; admins must use cancel to override another user's loan.
 POST /loans/:id/cancel — ADMIN only, cancel loan
-PATCH /loans/:id/extend — MEMBER/ADMIN, extend loan (body: { days })
+PATCH /loans/:id/extend — MEMBER/ADMIN, extend loan (body: { days }). Members can only extend their own loans; admins can extend any user's loan.
 
 ## QR Tags
 
 POST /qr/resolve — public, rate-limited, body: { nanoid } (6 chars), returns item or 404
 POST /qr — ADMIN only, create QR tag (body: { nanoid }, 6 chars, admin-provided)
 GET /qr — ADMIN only, paginated, filter: assigned
-POST /qr/assign — ADMIN only, assign QR tag to item (body: { nanoid, itemId }; creates tag if missing; blocked if item already has QR tag)
+POST /qr/assign — ADMIN only, assign QR tag to item (body: { nanoid, itemId, force?, currentItemId? }; creates tag if missing; blocked if item already has QR tag). If the QR tag is already assigned to a different item and `force` is not set, returns 409 `QR_ALREADY_ASSIGNED` with `{ currentItemId, currentItemName, currentItemShortId }` in details. To force-reassign, retry with `force: true` and `currentItemId` set to the value from the error details (required when `force` is true). An optimistic concurrency check verifies the tag's assignment has not changed since the client last read it; if it has, returns 409 `CONFLICT` with updated details.
 DELETE /qr/:id/assign — ADMIN only, unassign QR tag from item (422 if not assigned)
 
 ## Users
