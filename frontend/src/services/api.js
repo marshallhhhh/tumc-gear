@@ -34,7 +34,9 @@ api.interceptors.response.use(
         if (api._queryClient) {
           api._queryClient.clear();
         }
-        window.location.href = "/login";
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
       } finally {
         isHandling401 = false;
       }
