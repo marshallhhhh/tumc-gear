@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -24,6 +20,12 @@ import { useGeolocation } from "../../hooks/useGeolocation";
 import { useNotification } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 import { formatDateTime, formatDayOfWeekDate } from "../../utils/date";
+import {
+    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&
@@ -102,7 +104,6 @@ export default function LoanDetailModal({
         onClose={onClose}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { sx: { p: 3 } } }}
       >
         <DialogTitle sx={{ p: 0 }}>Loan Details</DialogTitle>
         <DialogContent

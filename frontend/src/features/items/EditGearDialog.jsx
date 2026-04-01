@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   TextField,
   FormControl,
@@ -16,6 +12,12 @@ import {
 import { useUpdateItem } from "../../hooks/useItems";
 import { useCategories, useCreateCategory } from "../../hooks/useCategories";
 import { useNotification } from "../../context/NotificationContext";
+import {
+    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 export default function EditGearDialog({ item, open, onClose }) {
   const { notify } = useNotification();
@@ -92,7 +94,6 @@ export default function EditGearDialog({ item, open, onClose }) {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      slotProps={{ paper: { sx: { p: 3 } } }}
     >
       <DialogTitle sx={{ p: 0 }}>Edit Gear</DialogTitle>
       <DialogContent sx={{ p: 0 }}>
