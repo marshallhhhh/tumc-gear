@@ -236,7 +236,7 @@ export default function LoanDetailModal({
                 ) : isOwnLoan ? (
                   "Return"
                 ) : (
-                  "Cancel"
+                  "Cancel Loan"
                 )}
               </Button>
 
