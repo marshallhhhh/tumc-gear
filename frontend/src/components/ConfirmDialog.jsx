@@ -1,7 +1,4 @@
-import {
-  DialogContentText,
-  Button,
-} from "@mui/material";
+import { DialogContentText, Button } from "@mui/material";
 import { Dialog, DialogContent, DialogActions, DialogTitle } from "./Dialog";
 
 export default function ConfirmDialog({
@@ -15,19 +12,12 @@ export default function ConfirmDialog({
   confirmColor = "error",
 }) {
   return (
-    <Dialog
-      open={open}
-      onClose={onCancel}
-      maxWidth="xs"
-      fullWidth
-    >
-      <DialogTitle gutterBottom sx={{ p: 0 }}>
-        {title}
-      </DialogTitle>
-      <DialogContent sx={{ p: 0, pt: 1 }}>
+    <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ p: 0, pt: 1 }}>
+      <DialogActions>
         <Button onClick={onCancel}>{cancelText}</Button>
         <Button onClick={onConfirm} color={confirmColor} variant="contained">
           {confirmText}

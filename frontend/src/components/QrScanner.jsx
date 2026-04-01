@@ -1,18 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  Button,
-  Box,
-  CircularProgress,
-} from "@mui/material";
+import { Button, Box, CircularProgress } from "@mui/material";
 import { QrCodeScanner as QrCodeScannerIcon } from "@mui/icons-material";
 import { Html5Qrcode } from "html5-qrcode";
 import { useNotification } from "../context/NotificationContext";
-import {
-    Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "./Dialog";
+import { Dialog, DialogTitle, DialogContent, DialogActions } from "./Dialog";
 
 const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 const APP_HOST = new URL(appUrl).hostname.toLowerCase();
@@ -208,16 +199,9 @@ export default function QrScanner({ onScan, children, ...buttonProps }) {
         {children || "Scan QR Code"}
       </Button>
 
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ p: 0, pt: 1 }} gutterBottom>
-          Scan QR Code
-        </DialogTitle>
-        <DialogContent sx={{ p: 0, pt: 1 }}>
+      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Scan QR Code</DialogTitle>
+        <DialogContent>
           <Box
             borderRadius={1}
             sx={{
@@ -304,7 +288,7 @@ export default function QrScanner({ onScan, children, ...buttonProps }) {
             )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 0, pt: 1 }}>
+        <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
         </DialogActions>
       </Dialog>
