@@ -16,7 +16,12 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { Dialog, DialogTitle, DialogContent, DialogActions } from "../components/Dialog";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../components/Dialog";
 import NumberSpinner from "../components/NumberSpinner";
 import StatusChip from "../components/StatusChip";
 import { DetailSkeleton } from "../components/PageSkeleton";
@@ -244,7 +249,6 @@ export default function ItemDetail() {
               fullWidth
               sx={{
                 m: 2,
-                p: 0,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
@@ -260,7 +264,7 @@ export default function ItemDetail() {
                 sx={{ mt: 1 }}
               />
             </DialogContent>
-            <DialogActions sx={{ p: 0 }}>
+            <DialogActions>
               <Button onClick={() => setCheckoutOpen(false)}>Cancel</Button>
               <Button
                 variant="contained"

@@ -14,7 +14,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import LoanDetailModal from "../loans/LoanDetailModal";
 import { formatDate } from "../../utils/date";
 import {
-    Dialog,
+  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
