@@ -1,8 +1,4 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -14,6 +10,13 @@ import StatusChip from "../../components/StatusChip";
 import { useCloseFoundReport } from "../../hooks/useFoundReports";
 import { useNotification } from "../../context/NotificationContext";
 import { formatDateTime } from "../../utils/date";
+
+import {
+    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 export default function FoundReportDetailModal({ report, open, onClose }) {
   const navigate = useNavigate();
@@ -41,7 +44,6 @@ export default function FoundReportDetailModal({ report, open, onClose }) {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      slotProps={{ paper: { sx: { p: 3 } } }}
     >
       <DialogTitle sx={{ p: 0 }}>Found Report</DialogTitle>
       <DialogContent

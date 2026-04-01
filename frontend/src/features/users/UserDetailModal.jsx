@@ -1,9 +1,5 @@
 import { useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -17,6 +13,12 @@ import { useNotification } from "../../context/NotificationContext";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import LoanDetailModal from "../loans/LoanDetailModal";
 import { formatDate } from "../../utils/date";
+import {
+    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 export default function UserDetailModal({ user, open, onClose }) {
   const { notify } = useNotification();

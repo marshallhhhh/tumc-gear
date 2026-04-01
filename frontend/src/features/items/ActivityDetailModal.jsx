@@ -1,9 +1,5 @@
 import { formatDateTime } from "../../utils/date";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -15,6 +11,12 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LocationMinimap from "../../components/LocationMinimap";
 import { useNotification } from "../../context/NotificationContext";
 import { useNavigate } from "react-router-dom";
+import {
+    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 export default function ActivityDetailModal({ entry, open, onClose }) {
   const { notify } = useNotification();

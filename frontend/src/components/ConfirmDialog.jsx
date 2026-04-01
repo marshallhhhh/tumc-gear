@@ -1,11 +1,8 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
   DialogContentText,
-  DialogActions,
   Button,
 } from "@mui/material";
+import { Dialog, DialogContent, DialogActions, DialogTitle } from "./Dialog";
 
 export default function ConfirmDialog({
   open,
@@ -19,12 +16,10 @@ export default function ConfirmDialog({
 }) {
   return (
     <Dialog
-      slotProps={{ paper: { sx: { p: 3 } } }}
       open={open}
       onClose={onCancel}
       maxWidth="xs"
       fullWidth
-      sx={{ p: 0 }}
     >
       <DialogTitle gutterBottom sx={{ p: 0 }}>
         {title}

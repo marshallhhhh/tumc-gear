@@ -15,11 +15,8 @@ import {
   Paper,
   CircularProgress,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions } from "../components/Dialog";
 import NumberSpinner from "../components/NumberSpinner";
 import StatusChip from "../components/StatusChip";
 import { DetailSkeleton } from "../components/PageSkeleton";
@@ -240,11 +237,9 @@ export default function ItemDetail() {
             open={checkoutOpen}
             onClose={() => setCheckoutOpen(false)}
             maxWidth="xs"
-            sx={{ p: 0 }}
-            slotProps={{ paper: { sx: { p: 3 } } }}
             fullWidth
           >
-            <DialogTitle sx={{ p: 0 }}>Checkout — {item?.name}</DialogTitle>
+            <DialogTitle>Checkout — {item?.name}</DialogTitle>
             <DialogContent
               fullWidth
               sx={{
