@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import NumberSpinner from "../components/NumberSpinner";
 import StatusBadge from "../components/StatusBadge";
 import { DetailSkeleton } from "../components/PageSkeleton";
 import { ErrorOutline as ErrorIcon } from "@mui/icons-material";
@@ -240,26 +241,23 @@ export default function ItemDetail() {
             open={checkoutOpen}
             onClose={() => setCheckoutOpen(false)}
             maxWidth="xs"
+            sx={{ p: 0 }}
+            slotProps={{ paper: { sx: { p: 3 } } }}
             fullWidth
           >
-            <DialogTitle>Checkout — {item?.name}</DialogTitle>
-            <DialogContent>
-              <TextField
+            <DialogTitle sx={{p: 0}}>Checkout — {item?.name}</DialogTitle>
+            <DialogContent fullWidth sx={{m: 2, p: 0, display: "flex", justifyContent: "center", alignItems: "center"}} >
+              <NumberSpinner
                 label="Loan duration (days)"
-                type="number"
+                min={1}
+                max={30}
                 value={days}
-                onChange={(e) =>
-                  setDays(
-                    Math.max(1, Math.min(30, parseInt(e.target.value) || 1)),
-                  )
-                }
-                slotProps={{ htmlInput: { min: 1, max: 30 } }}
-                size="small"
-                fullWidth
+                onValueChange={(value) => setDays(value)}
+                defaultValue={7}
                 sx={{ mt: 1 }}
               />
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{p: 0}}>
               <Button onClick={() => setCheckoutOpen(false)}>Cancel</Button>
               <Button
                 variant="contained"
