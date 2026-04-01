@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Box,
   CircularProgress,
 } from "@mui/material";
 import { QrCodeScanner as QrCodeScannerIcon } from "@mui/icons-material";
 import { Html5Qrcode } from "html5-qrcode";
 import { useNotification } from "../context/NotificationContext";
+import {
+    Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "./Dialog";
 
 const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 const APP_HOST = new URL(appUrl).hostname.toLowerCase();
@@ -211,7 +213,6 @@ export default function QrScanner({ onScan, children, ...buttonProps }) {
         onClose={handleClose}
         maxWidth="xs"
         fullWidth
-        slotProps={{ paper: { sx: { p: 3 } } }}
       >
         <DialogTitle sx={{ p: 0, pt: 1 }} gutterBottom>
           Scan QR Code
