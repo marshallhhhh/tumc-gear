@@ -12,7 +12,7 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import LocationMinimap from "../../components/LocationMinimap";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import {
@@ -130,7 +130,7 @@ export default function LoanDetailModal({
               >
                 {loan.item?.name}
               </Typography>
-              <StatusBadge status={loanStatus} />
+              <StatusChip status={loanStatus} />
             </Box>
             <Typography variant="body2" color="text.secondary">
               {loan.item?.shortId}

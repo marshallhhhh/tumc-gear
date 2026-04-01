@@ -20,7 +20,7 @@ import {
   QrCode as QrIcon,
 } from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import EmptyState from "../../components/EmptyState";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import CreateItemDialog from "../../features/items/CreateItemDialog";
@@ -91,7 +91,7 @@ export default function GearList() {
       label: "Status",
       sortable: false,
       render: (row) => (
-        <StatusBadge status={row.hasActiveLoan ? "CHECKED_OUT" : "AVAILABLE"} />
+        <StatusChip status={row.hasActiveLoan ? "CHECKED_OUT" : "AVAILABLE"} />
       ),
     },
   ];

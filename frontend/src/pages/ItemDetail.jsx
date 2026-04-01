@@ -12,7 +12,6 @@ import {
   Box,
   Typography,
   Button,
-  TextField,
   Paper,
   CircularProgress,
   Alert,
@@ -22,7 +21,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import NumberSpinner from "../components/NumberSpinner";
-import StatusBadge from "../components/StatusBadge";
+import StatusChip from "../components/StatusChip";
 import { DetailSkeleton } from "../components/PageSkeleton";
 import { ErrorOutline as ErrorIcon } from "@mui/icons-material";
 
@@ -131,7 +130,7 @@ export default function ItemDetail() {
           >
             <Typography variant="h4">{item.name}</Typography>
             {isMember && (
-              <StatusBadge status={isAvailable ? "AVAILABLE" : "CHECKED_OUT"} />
+              <StatusChip status={isAvailable ? "AVAILABLE" : "CHECKED_OUT"} />
             )}
           </Box>
           <Box width="100%" alignItems={"left"}>
@@ -245,8 +244,17 @@ export default function ItemDetail() {
             slotProps={{ paper: { sx: { p: 3 } } }}
             fullWidth
           >
-            <DialogTitle sx={{p: 0}}>Checkout — {item?.name}</DialogTitle>
-            <DialogContent fullWidth sx={{m: 2, p: 0, display: "flex", justifyContent: "center", alignItems: "center"}} >
+            <DialogTitle sx={{ p: 0 }}>Checkout — {item?.name}</DialogTitle>
+            <DialogContent
+              fullWidth
+              sx={{
+                m: 2,
+                p: 0,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <NumberSpinner
                 label="Loan duration (days)"
                 min={1}
@@ -257,7 +265,7 @@ export default function ItemDetail() {
                 sx={{ mt: 1 }}
               />
             </DialogContent>
-            <DialogActions sx={{p: 0}}>
+            <DialogActions sx={{ p: 0 }}>
               <Button onClick={() => setCheckoutOpen(false)}>Cancel</Button>
               <Button
                 variant="contained"

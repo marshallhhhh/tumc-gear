@@ -110,7 +110,7 @@ React SPA for tracking climbing gear inventory. Members scan QR codes, checkout/
       Navbar.jsx
       PageSkeleton.jsx
       QrScanner.jsx
-      StatusBadge.jsx
+      StatusChip.jsx
     /utils
       date.js              # Date formatting helpers
 ```
@@ -529,12 +529,12 @@ Paginated, sortable table with row click support.
 />
 ```
 
-## StatusBadge
+## StatusChip
 
 MUI Chip mapping status to color.
 
 ```jsx
-<StatusBadge status={string} size={"small" | "medium"} />
+<StatusChip status={string} size={"small" | "medium"} />
 ```
 
 | Status      | Color   |

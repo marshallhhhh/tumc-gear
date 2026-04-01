@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useFoundReports } from "../../hooks/useFoundReports";
 import { Container, Typography } from "@mui/material";
 import DataTable from "../../components/DataTable";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
 import FoundReportDetailModal from "../../features/foundReports/FoundReportDetailModal";
@@ -46,7 +46,7 @@ export default function FoundReports() {
     {
       id: "status",
       label: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => <StatusChip status={row.status} />,
     },
     {
       id: "item",
