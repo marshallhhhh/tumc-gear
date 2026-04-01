@@ -2,16 +2,18 @@ import { Chip } from "@mui/material";
 
 const statusConfig = {
   ACTIVE: { label: "Active", color: "success" },
-  RETURNED: { label: "Returned", color: "default" },
+  RETURNED: { label: "Returned", color: "success" },
   CANCELLED: { label: "Cancelled", color: "warning" },
   OVERDUE: { label: "Overdue", color: "error" },
   AVAILABLE: { label: "Available", color: "success" },
-  CHECKED_OUT: { label: "Checked Out", color: "error" },
+  CHECKED_OUT: { label: "Checked Out", color: "background.paper" },
   OPEN: { label: "Open", color: "warning" },
   CLOSED: { label: "Closed", color: "default" },
+  CREATED: { label: "Created", color: "secondary" },
+  FOUND_REPORT_FILED: { label: "Found Report Filed", color: "warning" },
 };
 
-export default function StatusBadge({ status, size = "small" }) {
+export default function StatusChip({ status, size = "small" }) {
   const config = statusConfig[status] || { label: status, color: "default" };
 
   return <Chip label={config.label} color={config.color} size={size} />;

@@ -13,7 +13,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { Assignment as LoansIcon } from "@mui/icons-material";
-import StatusBadge from "../components/StatusBadge";
+import StatusChip from "../components/StatusChip";
 import EmptyState from "../components/EmptyState";
 import { TableSkeleton } from "../components/PageSkeleton";
 import LoanDetailModal from "../features/loans/LoanDetailModal";
@@ -97,7 +97,7 @@ export default function MyLoans() {
                   },
                 }}
               />
-              <StatusBadge
+              <StatusChip
                 size="small"
                 status={isOverdue(loan) ? "OVERDUE" : loan.status}
               />
