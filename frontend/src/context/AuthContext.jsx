@@ -17,6 +17,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const initialLoadDone = useRef(false);
+  const signingIn = useRef(false);
 
   const fetchUser = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -50,6 +51,7 @@ export function AuthProvider({ children }) {
       setSession(s);
       setAccessToken(s?.access_token ?? null);
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        if (signingIn.current) return;
         await fetchUser({ silent: initialLoadDone.current });
       } else if (event === "SIGNED_OUT") {
         setLoading(false);
@@ -61,11 +63,31 @@ export function AuthProvider({ children }) {
   }, [fetchUser]);
 
   const signIn = useCallback(async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+    signingIn.current = true;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+
+      setSession(data.session);
+      setAccessToken(data.session.access_token);
+
+      try {
+        const userData = await getMe();
+        setUser(userData);
+        initialLoadDone.current = true;
+      } catch {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setAccessToken(null);
+        throw new Error("Account is inactive or deleted.");
+      }
+    } finally {
+      signingIn.current = false;
+    }
   }, []);
 
   const signUp = useCallback(async (email, password, fullName) => {
