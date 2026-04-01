@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import LocationMinimap from "../../components/LocationMinimap";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import { useCloseFoundReport } from "../../hooks/useFoundReports";
 import { useNotification } from "../../context/NotificationContext";
 import { formatDateTime } from "../../utils/date";
@@ -69,7 +69,7 @@ export default function FoundReportDetailModal({ report, open, onClose }) {
           >
             {report.item?.shortId}
           </Typography>
-          <StatusBadge status={report.status} alignSelf="flex-start" />
+          <StatusChip status={report.status} alignSelf="flex-start" />
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>

@@ -66,7 +66,7 @@ npm run lint         # ESLint 9 flat config
 - **Data fetching** — Always use React Query hooks (`useQuery`/`useMutation`). Invalidate related query keys on mutation success. staleTime: 30s for lists, 60s for details.
 - **Notifications** — Use `useNotification()` hook → `notify(message, severity)`. Severity: success | error | warning | info.
 - **Auth** — Use `useAuth()` from `AuthContext`. Properties: `user`, `session`, `isAdmin`, `isMember`, `isAuthenticated`.
-- **UI components** — MUI with `sx` prop for styling. Reusable components in `components/` (DataTable, StatusBadge, ConfirmDialog, LocationMinimap, QrScanner, PageSkeleton).
+- **UI components** — MUI with `sx` prop for styling. Reusable components in `components/` (DataTable, StatusChip, ConfirmDialog, LocationMinimap, QrScanner, PageSkeleton).
 - **Loading states** — Use `<PageSkeleton />` for full-page loading. MUI Skeleton for inline.
 - **Routing** — Public routes render directly. Protected routes use `<ProtectedRoute>`. Admin routes use `<AdminRoute>`.
 
