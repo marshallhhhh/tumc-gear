@@ -13,7 +13,7 @@ import { useUpdateItem } from "../../hooks/useItems";
 import { useCategories, useCreateCategory } from "../../hooks/useCategories";
 import { useNotification } from "../../context/NotificationContext";
 import {
-    Dialog,
+  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -89,14 +89,9 @@ export default function EditGearDialog({ item, open, onClose }) {
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle sx={{ p: 0 }}>Edit Gear</DialogTitle>
-      <DialogContent sx={{ p: 0 }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Edit Gear</DialogTitle>
+      <DialogContent>
         <TextField
           label="Name"
           fullWidth
@@ -166,7 +161,7 @@ export default function EditGearDialog({ item, open, onClose }) {
           slotProps={{ htmlInput: { maxLength: 100 } }}
         />
       </DialogContent>
-      <DialogActions sx={{ p: 0 }}>
+      <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
           onClick={handleSave}
