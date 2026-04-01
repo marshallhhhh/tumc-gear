@@ -1,29 +1,16 @@
-import { Box, Chip } from "@mui/material";
+import { Box } from "@mui/material";
 import { useState } from "react";
+import StatusChip from "../../components/StatusChip";
 import DataTable from "../../components/DataTable";
 import ActivityDetailModal from "./ActivityDetailModal";
 import { formatDate } from "../../utils/date";
-
-const eventChipConfig = {
-  Created: { color: "secondary" },
-  "Checked Out": { color: "info" },
-  Returned: { color: "success" },
-  "Loan Cancelled": { color: "warning" },
-  "Found Report Filed": { color: "error" },
-};
 
 const columns = [
   {
     id: "type",
     label: "Event",
     sortable: false,
-    render: (row) => (
-      <Chip
-        label={row.type}
-        size="small"
-        color={eventChipConfig[row.type]?.color || "default"}
-      />
-    ),
+    render: (row) => <StatusChip status={row.type} />,
   },
   {
     id: "timestamp",
@@ -45,7 +32,7 @@ function buildActivityEntries(item) {
   // Item created event
   entries.push({
     id: "created",
-    type: "Created",
+    type: "CREATED",
     timestamp: item.createdAt,
     user: null,
     latitude: null,
@@ -57,7 +44,7 @@ function buildActivityEntries(item) {
     for (const loan of item.loans) {
       entries.push({
         id: `checkout-${loan.id}`,
-        type: "Checked Out",
+        type: "CHECKED_OUT",
         timestamp: loan.checkoutDate,
         user: loan.user,
         latitude: loan.openedLatitude,
@@ -67,7 +54,7 @@ function buildActivityEntries(item) {
       if (loan.status === "RETURNED" && loan.returnDate) {
         entries.push({
           id: `return-${loan.id}`,
-          type: "Returned",
+          type: "RETURNED",
           timestamp: loan.returnDate,
           user: loan.user,
           latitude: loan.closedLatitude,
@@ -78,7 +65,7 @@ function buildActivityEntries(item) {
       if (loan.status === "CANCELLED" && loan.cancelledAt) {
         entries.push({
           id: `cancel-${loan.id}`,
-          type: "Loan Cancelled",
+          type: "CANCELLED",
           timestamp: loan.cancelledAt,
           user: loan.cancelledByAdmin || loan.user,
           latitude: null,
@@ -93,7 +80,7 @@ function buildActivityEntries(item) {
     for (const report of item.foundReports) {
       entries.push({
         id: `report-${report.id}`,
-        type: "Found Report Filed",
+        type: "FOUND_REPORT_FILED",
         timestamp: report.createdAt,
         user: report.reporter,
         latitude: report.latitude,
