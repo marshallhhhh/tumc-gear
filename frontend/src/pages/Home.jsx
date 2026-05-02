@@ -118,7 +118,7 @@ export default function Home() {
         >
           <Box
             component="img"
-            src="/logo-full.png"
+            src="/logo.svg"
             alt="Logo"
             onClick={handleLogoClick}
             sx={{ height: 100, width: "auto", mb: 3, cursor: "pointer" }}

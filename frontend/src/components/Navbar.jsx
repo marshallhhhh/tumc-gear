@@ -94,7 +94,7 @@ export default function Navbar() {
         <Box component={RouterLink} to="/home" sx={{ display: "flex", mr: 2 }}>
           <Box
             component="img"
-            src="/logo-xs.png"
+            src="/logo.svg"
             alt="Logo"
             sx={{ height: 40 }}
           />
