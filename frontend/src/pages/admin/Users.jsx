@@ -43,7 +43,7 @@ export default function Users() {
         <Chip
           label={row.role.charAt(0) + row.role.slice(1).toLowerCase()}
           size="small"
-          color={row.role === "ADMIN" ? "primary" : "default"}
+          color={row.role === "ADMIN" ? "primary" : "warning"}
           variant="outlined"
         />
       ),

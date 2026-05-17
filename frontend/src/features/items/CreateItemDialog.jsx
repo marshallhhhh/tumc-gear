@@ -1,9 +1,5 @@
 import { useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   TextField,
   FormControl,
@@ -16,6 +12,12 @@ import {
 import { useCreateItem } from "../../hooks/useItems";
 import { useCategories, useCreateCategory } from "../../hooks/useCategories";
 import { useNotification } from "../../context/NotificationContext";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 export default function CreateItemDialog({ open, onClose, onCreated }) {
   const { notify } = useNotification();
@@ -85,19 +87,9 @@ export default function CreateItemDialog({ open, onClose, onCreated }) {
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      slotProps={{ paper: { sx: { p: 3 } } }}
-    >
-      <DialogTitle gutterBottom sx={{ p: 0 }}>
-        Add Gear
-      </DialogTitle>
-      <DialogContent
-        sx={{ p: 0, display: "flex", flexDirection: "column", gap: 2 }}
-      >
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Add Gear</DialogTitle>
+      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
           label="Name"
           fullWidth

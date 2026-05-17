@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -12,7 +8,7 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import LocationMinimap from "../../components/LocationMinimap";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import {
@@ -24,6 +20,12 @@ import { useGeolocation } from "../../hooks/useGeolocation";
 import { useNotification } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
 import { formatDateTime, formatDayOfWeekDate } from "../../utils/date";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&
@@ -97,16 +99,10 @@ export default function LoanDetailModal({
 
   return (
     <>
-      <Dialog
-        open={open}
-        onClose={onClose}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{ paper: { sx: { p: 3 } } }}
-      >
-        <DialogTitle sx={{ p: 0 }}>Loan Details</DialogTitle>
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Loan Details</DialogTitle>
         <DialogContent
-          sx={{ p: 0, display: "flex", flexDirection: "column", gap: 2 }}
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
           {/*Item name, status and shortId*/}
           <Box>
@@ -130,7 +126,7 @@ export default function LoanDetailModal({
               >
                 {loan.item?.name}
               </Typography>
-              <StatusBadge status={loanStatus} />
+              <StatusChip status={loanStatus} />
             </Box>
             <Typography variant="body2" color="text.secondary">
               {loan.item?.shortId}
@@ -219,7 +215,7 @@ export default function LoanDetailModal({
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 0, pt: 1 }}>
+        <DialogActions>
           <Button onClick={onClose}>Back</Button>
           {isActive && (isOwnLoan || showAdminActions) && (
             <>
@@ -240,7 +236,7 @@ export default function LoanDetailModal({
                 ) : isOwnLoan ? (
                   "Return"
                 ) : (
-                  "Cancel"
+                  "Cancel Loan"
                 )}
               </Button>
 
@@ -275,8 +271,8 @@ export default function LoanDetailModal({
         fullWidth
         slotProps={{ paper: { sx: { p: 3 } } }}
       >
-        <DialogTitle sx={{ p: 0, mb: 1 }}>Extend Loan</DialogTitle>
-        <DialogContent sx={{ p: 0, pt: 1 }}>
+        <DialogTitle>Extend Loan</DialogTitle>
+        <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Extend the loan for &quot;{loan.item?.name}&quot; by up to 30 days.
           </Typography>
@@ -294,7 +290,7 @@ export default function LoanDetailModal({
             sx={{ width: 100 }}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 0, pt: 1 }}>
+        <DialogActions>
           <Button onClick={() => setShowExtend(false)}>Back</Button>
           <Button
             variant="contained"

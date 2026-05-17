@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   TextField,
   FormControl,
@@ -16,6 +12,12 @@ import {
 import { useUpdateItem } from "../../hooks/useItems";
 import { useCategories, useCreateCategory } from "../../hooks/useCategories";
 import { useNotification } from "../../context/NotificationContext";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "../../components/Dialog";
 
 export default function EditGearDialog({ item, open, onClose }) {
   const { notify } = useNotification();
@@ -87,15 +89,9 @@ export default function EditGearDialog({ item, open, onClose }) {
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      slotProps={{ paper: { sx: { p: 3 } } }}
-    >
-      <DialogTitle sx={{ p: 0 }}>Edit Gear</DialogTitle>
-      <DialogContent sx={{ p: 0 }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Edit Gear</DialogTitle>
+      <DialogContent>
         <TextField
           label="Name"
           fullWidth
@@ -165,7 +161,7 @@ export default function EditGearDialog({ item, open, onClose }) {
           slotProps={{ htmlInput: { maxLength: 100 } }}
         />
       </DialogContent>
-      <DialogActions sx={{ p: 0 }}>
+      <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
           onClick={handleSave}

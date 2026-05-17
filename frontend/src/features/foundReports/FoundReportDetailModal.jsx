@@ -1,19 +1,17 @@
+import { Button, Typography, Box, Divider } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import LocationMinimap from "../../components/LocationMinimap";
+import StatusChip from "../../components/StatusChip";
+import { useCloseFoundReport } from "../../hooks/useFoundReports";
+import { useNotification } from "../../context/NotificationContext";
+import { formatDateTime } from "../../utils/date";
+
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  Typography,
-  Box,
-  Divider,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import LocationMinimap from "../../components/LocationMinimap";
-import StatusBadge from "../../components/StatusBadge";
-import { useCloseFoundReport } from "../../hooks/useFoundReports";
-import { useNotification } from "../../context/NotificationContext";
-import { formatDateTime } from "../../utils/date";
+} from "../../components/Dialog";
 
 export default function FoundReportDetailModal({ report, open, onClose }) {
   const navigate = useNavigate();
@@ -36,17 +34,9 @@ export default function FoundReportDetailModal({ report, open, onClose }) {
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="xs"
-      fullWidth
-      slotProps={{ paper: { sx: { p: 3 } } }}
-    >
-      <DialogTitle sx={{ p: 0 }}>Found Report</DialogTitle>
-      <DialogContent
-        sx={{ p: 0, display: "flex", flexDirection: "column", gap: 2 }}
-      >
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>Found Report</DialogTitle>
+      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Box>
           <Typography
             variant="h6"
@@ -69,7 +59,7 @@ export default function FoundReportDetailModal({ report, open, onClose }) {
           >
             {report.item?.shortId}
           </Typography>
-          <StatusBadge status={report.status} alignSelf="flex-start" />
+          <StatusChip status={report.status} alignSelf="flex-start" />
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
@@ -147,7 +137,7 @@ export default function FoundReportDetailModal({ report, open, onClose }) {
           </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 0, mt: 2 }}>
+      <DialogActions sx={{ mt: 2 }}>
         {report.status === "OPEN" && (
           <Button
             color="error"

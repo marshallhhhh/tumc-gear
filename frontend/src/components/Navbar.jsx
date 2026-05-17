@@ -92,12 +92,7 @@ export default function Navbar() {
     <AppBar position="sticky" color="primary">
       <Toolbar>
         <Box component={RouterLink} to="/home" sx={{ display: "flex", mr: 2 }}>
-          <Box
-            component="img"
-            src="/logo.svg"
-            alt="Logo"
-            sx={{ height: 40 }}
-          />
+          <Box component="img" src="/logo.svg" alt="Logo" sx={{ height: 40 }} />
         </Box>
         <Typography
           variant="h6"

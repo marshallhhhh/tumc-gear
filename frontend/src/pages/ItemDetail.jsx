@@ -12,16 +12,18 @@ import {
   Box,
   Typography,
   Button,
-  TextField,
   Paper,
   CircularProgress,
   Alert,
+} from "@mui/material";
+import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-} from "@mui/material";
-import StatusBadge from "../components/StatusBadge";
+} from "../components/Dialog";
+import NumberSpinner from "../components/NumberSpinner";
+import StatusChip from "../components/StatusChip";
 import { DetailSkeleton } from "../components/PageSkeleton";
 import { ErrorOutline as ErrorIcon } from "@mui/icons-material";
 
@@ -130,7 +132,7 @@ export default function ItemDetail() {
           >
             <Typography variant="h4">{item.name}</Typography>
             {isMember && (
-              <StatusBadge status={isAvailable ? "AVAILABLE" : "CHECKED_OUT"} />
+              <StatusChip status={isAvailable ? "AVAILABLE" : "CHECKED_OUT"} />
             )}
           </Box>
           <Box width="100%" alignItems={"left"}>
@@ -243,19 +245,22 @@ export default function ItemDetail() {
             fullWidth
           >
             <DialogTitle>Checkout — {item?.name}</DialogTitle>
-            <DialogContent>
-              <TextField
+            <DialogContent
+              fullWidth
+              sx={{
+                m: 2,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <NumberSpinner
                 label="Loan duration (days)"
-                type="number"
+                min={1}
+                max={30}
                 value={days}
-                onChange={(e) =>
-                  setDays(
-                    Math.max(1, Math.min(30, parseInt(e.target.value) || 1)),
-                  )
-                }
-                slotProps={{ htmlInput: { min: 1, max: 30 } }}
-                size="small"
-                fullWidth
+                onValueChange={(value) => setDays(value)}
+                defaultValue={7}
                 sx={{ mt: 1 }}
               />
             </DialogContent>
