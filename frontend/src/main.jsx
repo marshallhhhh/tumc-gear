@@ -7,6 +7,7 @@ import theme from "./theme";
 import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { setQueryClient } from "./services/api";
 import "leaflet/dist/leaflet.css";
 
@@ -25,7 +26,9 @@ createRoot(document.getElementById("root")).render(
         <BrowserRouter>
           <AuthProvider>
             <NotificationProvider>
-              <App />
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
             </NotificationProvider>
           </AuthProvider>
         </BrowserRouter>

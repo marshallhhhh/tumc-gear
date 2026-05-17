@@ -4,7 +4,7 @@ import { useLoans, useCancelLoan } from "../../hooks/useLoans";
 import { useNotification } from "../../context/NotificationContext";
 import { Container, Typography } from "@mui/material";
 import DataTable from "../../components/DataTable";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
@@ -108,7 +108,7 @@ export default function Loans() {
       id: "status",
       label: "Status",
       render: (row) => (
-        <StatusBadge status={isOverdue(row) ? "OVERDUE" : row.status} />
+        <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
       ),
     },
   ];

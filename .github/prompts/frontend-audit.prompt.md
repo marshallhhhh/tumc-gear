@@ -69,7 +69,7 @@ If an argument was provided, audit only that area's files (e.g. a specific featu
 ### 7. Component Patterns
 
 - Pages and feature components use default exports
-- Reusable components are used where available: `DataTable`, `StatusBadge`, `ConfirmDialog`, `LocationMinimap`, `QrScanner`, `EmptyState`
+- Reusable components are used where available: `DataTable`, `StatusChip`, `ConfirmDialog`, `LocationMinimap`, `QrScanner`, `EmptyState`
 - No duplicated UI logic that should use an existing shared component
 
 ### 8. General Code Quality

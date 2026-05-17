@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import StatusBadge from "../../components/StatusBadge";
+import StatusChip from "../../components/StatusChip";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import { DetailSkeleton } from "../../components/PageSkeleton";
 import EditGearDialog from "../../features/items/EditGearDialog";
@@ -185,7 +185,7 @@ export default function GearDetail() {
               <Typography variant="body2" color="text.secondary">
                 Status
               </Typography>
-              <StatusBadge status="ACTIVE" />
+              <StatusChip status="ACTIVE" />
             </Box>
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography variant="body2" color="text.secondary">
@@ -240,7 +240,7 @@ export default function GearDetail() {
           </Box>
         ) : (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <StatusBadge status="AVAILABLE" />
+            <StatusChip status="AVAILABLE" />
             <Typography variant="body2" color="text.secondary">
               Not currently on loan
             </Typography>
