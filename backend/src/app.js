@@ -8,6 +8,7 @@ import { logger } from "./config/logger.js";
 import { swaggerSpec } from "./config/swagger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./routes/index.js";
+import { globalRateLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+app.use(globalRateLimiter);
 app.use(router);
 
 app.use(errorHandler);
