@@ -60,7 +60,7 @@ export default function Login() {
     }
     try {
       await resetPassword(email);
-      notify("Check your email for a reset link", "info");
+      notify("Check your email for a reset link", "success");
     } catch (err) {
       setError(err.message);
     }
