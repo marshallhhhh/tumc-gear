@@ -26,9 +26,9 @@ jobs:
             npm ci 
             cd frontend
             npm run build
-            rf -rf /var/www/tumc-gear/*
+            rm -rf /var/www/tumc-gear/*
             cp -r dist/* /var/www/tumc-gear/
 
             #rebuild backend container
             cd /opt/apps/supabase
-            docker compose up -d --force-recreate --no-deps gear_backend
+            docker compose up -d --force-recreate --no-deps backend
