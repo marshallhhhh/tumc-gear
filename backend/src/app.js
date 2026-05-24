@@ -20,7 +20,7 @@ app.use(
 app.use(express.json());
 
 // only run swagger in non-prod
-if (env.NODE_ENV !== 'production') {
+if (env.NODE_ENV !== "production") {
   const swaggerUi = await import("swagger-ui-express");
   const { swaggerSpec } = await import("./config/swagger.js");
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -21,7 +21,7 @@ jobs:
           script: |
             cd /opt/apps/tumc-gear
             git pull origin main
-            
+
             # build frontend
             npm ci 
             cd frontend
