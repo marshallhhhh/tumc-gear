@@ -85,7 +85,7 @@ export default function QrScanner({ onScan, children, ...buttonProps }) {
     if (!open) return;
 
     let cancelled = false;
-    
+
     async function startScanning() {
       const { Html5Qrcode } = await import("html5-qrcode");
       try {

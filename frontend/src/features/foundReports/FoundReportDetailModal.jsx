@@ -1,4 +1,4 @@
-import { lazy } from "react"
+import { lazy } from "react";
 import { Button, Typography, Box, Divider } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import StatusChip from "../../components/StatusChip";
