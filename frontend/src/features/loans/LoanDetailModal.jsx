@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -9,7 +9,6 @@ import {
   Divider,
 } from "@mui/material";
 import StatusChip from "../../components/StatusChip";
-import LocationMinimap from "../../components/LocationMinimap";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import {
   useReturnLoan,
@@ -26,6 +25,8 @@ import {
   DialogContent,
   DialogActions,
 } from "../../components/Dialog";
+
+const LocationMinimap = lazy(() => import("../../components/LocationMinimap"));
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&
