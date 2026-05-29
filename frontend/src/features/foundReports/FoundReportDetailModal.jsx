@@ -5,8 +5,7 @@ import StatusChip from "../../components/StatusChip";
 import { useCloseFoundReport } from "../../hooks/useFoundReports";
 import { useNotification } from "../../context/NotificationContext";
 import { formatDateTime } from "../../utils/date";
-
-const LocationMinimap = lazy(() => import("../../components/LocationMinimap"));
+import LocationMinimap from "../../components/LocationMinimap";
 
 import {
   Dialog,

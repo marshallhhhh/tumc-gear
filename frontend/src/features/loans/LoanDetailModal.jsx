@@ -25,8 +25,7 @@ import {
   DialogContent,
   DialogActions,
 } from "../../components/Dialog";
-
-const LocationMinimap = lazy(() => import("../../components/LocationMinimap"));
+import LocationMinimap from "../../components/LocationMinimap";
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&
