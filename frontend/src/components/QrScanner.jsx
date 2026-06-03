@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button, Box, CircularProgress } from "@mui/material";
 import { QrCodeScanner as QrCodeScannerIcon } from "@mui/icons-material";
-import { Html5Qrcode } from "html5-qrcode";
 import { useNotification } from "../context/NotificationContext";
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "./Dialog";
 
@@ -88,6 +87,7 @@ export default function QrScanner({ onScan, children, ...buttonProps }) {
     let cancelled = false;
 
     async function startScanning() {
+      const { Html5Qrcode } = await import("html5-qrcode");
       try {
         let cameraConfig;
         try {

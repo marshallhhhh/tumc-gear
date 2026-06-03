@@ -9,7 +9,6 @@ import {
   Divider,
 } from "@mui/material";
 import StatusChip from "../../components/StatusChip";
-import LocationMinimap from "../../components/LocationMinimap";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import {
   useReturnLoan,
@@ -26,6 +25,7 @@ import {
   DialogContent,
   DialogActions,
 } from "../../components/Dialog";
+import LocationMinimap from "../../components/LocationMinimap";
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&

@@ -2,7 +2,6 @@ import { formatDateTime } from "../../utils/date";
 import { Button, Typography, Box, Divider, Tooltip } from "@mui/material";
 import StatusChip from "../../components/StatusChip";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import LocationMinimap from "../../components/LocationMinimap";
 import { useNotification } from "../../context/NotificationContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,6 +10,7 @@ import {
   DialogContent,
   DialogActions,
 } from "../../components/Dialog";
+import LocationMinimap from "../../components/LocationMinimap";
 
 export default function ActivityDetailModal({ entry, open, onClose }) {
   const { notify } = useNotification();

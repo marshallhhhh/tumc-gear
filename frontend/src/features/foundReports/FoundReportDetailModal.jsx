@@ -1,10 +1,10 @@
 import { Button, Typography, Box, Divider } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import LocationMinimap from "../../components/LocationMinimap";
 import StatusChip from "../../components/StatusChip";
 import { useCloseFoundReport } from "../../hooks/useFoundReports";
 import { useNotification } from "../../context/NotificationContext";
 import { formatDateTime } from "../../utils/date";
+import LocationMinimap from "../../components/LocationMinimap";
 
 import {
   Dialog,
