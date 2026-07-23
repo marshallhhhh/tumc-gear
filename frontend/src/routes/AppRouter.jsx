@@ -12,6 +12,7 @@ import ReportFound from "../pages/ReportFound";
 import QrLanding from "../pages/QrLanding";
 import ResetPassword from "../pages/ResetPassword";
 import NotFound from "../pages/NotFound";
+import PrintTags from "../pages/PrintTags";
 
 // Member pages
 import MyLoans from "../pages/MyLoans";
@@ -38,6 +39,7 @@ export default function AppRouter() {
         <Route path="/report-found" element={<ReportFound />} />
         <Route path="/t/:nanoid" element={<QrLanding />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/print-tags" element={<PrintTags />} />
 
         {/* Member */}
         <Route
