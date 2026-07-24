@@ -39,7 +39,6 @@ export default function AppRouter() {
         <Route path="/report-found" element={<ReportFound />} />
         <Route path="/t/:nanoid" element={<QrLanding />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/print-tags" element={<PrintTags />} />
 
         {/* Member */}
         <Route
@@ -65,6 +64,14 @@ export default function AppRouter() {
           element={
             <AdminRoute>
               <Dashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/print-tags"
+          element={
+            <AdminRoute>
+              <PrintTags />
             </AdminRoute>
           }
         />

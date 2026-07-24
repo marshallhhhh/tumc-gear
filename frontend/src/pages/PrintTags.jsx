@@ -125,36 +125,36 @@ export default function PrintTags() {
       `}</style>
 
       <Container maxWidth="md" sx={{ mt: 4 }} className="no-print">
-      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-        <NumberSpinner
-          label="Number of pages"
-          min={1}
-          max={30}
-          value={pageCount}
-          onValueChange={(value) => handlePageCountChange(value)}
-          defaultValue={1}
-          sx={{ height: 56 }}
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={doubleSided}
-              onChange={handleDoubleSidedChange}
-            />
-          }
-          label="Double sided"
-        />
-        <Button
-          variant="contained"
-          onClick={handlePrint}
-          disabled={pageCount <= 0}
-        >
-          Print
-        </Button>
-      </Stack>
+        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+          <NumberSpinner
+            label="Number of pages"
+            min={1}
+            max={30}
+            value={pageCount}
+            onValueChange={(value) => handlePageCountChange(value)}
+            defaultValue={1}
+            sx={{ height: 56 }}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={doubleSided}
+                onChange={handleDoubleSidedChange}
+              />
+            }
+            label="Double sided"
+          />
+          <Button
+            variant="contained"
+            onClick={handlePrint}
+            disabled={pageCount <= 0}
+          >
+            Print
+          </Button>
+        </Stack>
       </Container>
-      
-      <Container maxWidth="md" sx={{ mt: 4, boxShadow: 2, paddingY: 4 }} >
+
+      <Container maxWidth="md" sx={{ mt: 4, boxShadow: 2, paddingY: 4 }}>
         <div className="print-only">
           {/* FRONT */}
           {pages.map((tagsOnPage, i) => (

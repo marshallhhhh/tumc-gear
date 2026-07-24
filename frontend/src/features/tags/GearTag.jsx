@@ -59,7 +59,6 @@ export function GearTagFront() {
             fontFamily: "monospace",
             backgroundColor: "white",
             textAlign: "center",
-            backgroundColor: "white",
             color: "rgb(100,100,100)",
             borderRadius: "0 0 3mm 3mm",
           }}
@@ -88,15 +87,11 @@ export function GearTagFront() {
 
 export function GearTagBack() {
   const hasCreated = useRef(false);
-  const [id, setId] = useState(null);
-  const appUrl = import.meta.env.VITE_APP_URL;
 
   useEffect(() => {
     if (hasCreated.current) return;
     hasCreated.current = true;
-
-    setId(nanoid(6));
-  });
+  }, []);
 
   return (
     <div
@@ -122,7 +117,6 @@ export function GearTagBack() {
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          display: "flex",
           backgroundColor: "whitesmoke",
           textAlign: "center",
           alignItems: "center",
@@ -138,8 +132,7 @@ export function GearTagBack() {
           tasuniclimbing@gmail.com
         </p>
         <p style={{ fontSize: "13px", fontWeight: "bold" }}>
-          facebook.com/groups/
-          tasuniclimbing
+          facebook.com/groups/ tasuniclimbing
         </p>
       </div>
     </div>
