@@ -9,7 +9,6 @@ jobs:
   deploy:
     environment: production
     runs-on: ubuntu-latest
-    timeout-minutes: 20
 
     steps:
       - name: Deploy to VPS
@@ -18,19 +17,18 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 20m
 
           script: |
-            set -e
             cd /opt/apps/tumc-gear
             git pull origin main
 
-            # install only the frontend workspace and build it
-            npm ci --workspace frontend
-            npm run --workspace frontend build
+            # build frontend
+            npm ci 
+            cd frontend
+            npm run build
             rm -rf /var/www/tumc-gear/*
-            cp -r frontend/dist/* /var/www/tumc-gear/
+            cp -r dist/* /var/www/tumc-gear/
 
-            # rebuild backend container
+            #rebuild backend container
             cd /opt/apps/supabase
             docker compose up -d --force-recreate --no-deps backend
