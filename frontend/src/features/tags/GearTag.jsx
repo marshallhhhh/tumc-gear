@@ -138,7 +138,8 @@ export function GearTagBack() {
           tasuniclimbing@gmail.com
         </p>
         <p style={{ fontSize: "13px", fontWeight: "bold" }}>
-          facebook.com/groups/tasuniclimbing
+          facebook.com/groups/
+          tasuniclimbing
         </p>
       </div>
     </div>
