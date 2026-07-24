@@ -15,6 +15,7 @@ function NumberSpinner({
   label,
   error,
   size = "medium",
+  sx,
   ...other
 }) {
   let id = React.useId();
@@ -33,6 +34,7 @@ function NumberSpinner({
           error={error}
           variant="outlined"
           sx={{
+            height: 56,
             "& .MuiButton-root": {
               borderColor: "divider",
               minWidth: 0,
@@ -41,6 +43,7 @@ function NumberSpinner({
                 color: "text.primary",
               },
             },
+            ...sx,
           }}
         >
           {props.children}
