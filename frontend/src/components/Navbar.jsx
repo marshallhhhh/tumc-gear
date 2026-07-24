@@ -33,6 +33,7 @@ import {
   MoreHoriz as MoreIcon,
   WatchLater as OverdueIcon,
   AssignmentInd as MyLoansIcon,
+  Print as PrintIcon,
 } from "@mui/icons-material";
 
 export default function Navbar() {
@@ -182,6 +183,9 @@ export default function Navbar() {
                 to="/admin/found-reports"
               >
                 Found Reports
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/print-tags">
+                Print Tags
               </Button>
             </>
           )}
@@ -403,6 +407,18 @@ function MobileNav({
               <ReportsIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText>Found Reports</ListItemText>
+          </MenuItem>,
+          <MenuItem
+            key="print-tags"
+            onClick={() => {
+              setMoreMenuAnchor(null);
+              navigate("/print-tags");
+            }}
+          >
+            <ListItemIcon>
+              <PrintIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Print Tags</ListItemText>
           </MenuItem>,
         ]}
         {isAuthenticated && [
