@@ -34,7 +34,8 @@ function NumberSpinner({
           error={error}
           variant="outlined"
           sx={{
-            height: 56,
+            minHeight: 56,
+            justifyContent: "flex-start",
             "& .MuiButton-root": {
               borderColor: "divider",
               minWidth: 0,

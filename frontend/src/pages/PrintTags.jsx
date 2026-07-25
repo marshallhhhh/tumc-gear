@@ -2,19 +2,25 @@ import {
   Button,
   Checkbox,
   Container,
+  FormLabel,
+  FormControl,
   FormControlLabel,
-  Grid,
+  MenuItem,
+  Select,
   Stack,
 } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { GearTagFront, GearTagBack } from "../features/tags/GearTag";
 import NumberSpinner from "../components/NumberSpinner";
-
-const TAGS_PER_PAGE = 9;
+import { getTagLayoutForPage } from "../features/tags/printTagsLayout";
 
 export default function PrintTags() {
   const [pageCount, setPageCount] = useState(1);
   const [doubleSided, setDoubleSided] = useState(true);
+  const [tagSize, setTagSize] = useState("sm");
+
+  const layout = useMemo(() => getTagLayoutForPage(tagSize), [tagSize]);
+  const safePageCount = typeof pageCount === "number" ? pageCount : 0;
 
   const handlePrint = () => {
     window.print();
@@ -39,28 +45,39 @@ export default function PrintTags() {
     setDoubleSided(event.target.checked);
   };
 
-  const pages = Array.from(
-    { length: typeof pageCount === "number" ? pageCount : 0 },
-    () => TAGS_PER_PAGE,
-  );
+  const handleTagSizeChange = (event) => {
+    setTagSize(event.target.value);
+  };
+
+  const pages = Array.from({ length: safePageCount }, () => layout.tagsPerPage);
 
   const renderPage = (tagsOnPage, TagComponent) => (
-    <Grid container columnSpacing={1} rowSpacing={2}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${layout.rows}, minmax(0, 1fr))`,
+        gap: `${layout.gapMm}mm`,
+        width: "100%",
+        height: "100%",
+        alignContent: "start",
+      }}
+    >
       {Array.from({ length: tagsOnPage }, (_, index) => (
-        <Grid
+        <div
           key={index}
-          size={4}
-          sx={{
+          style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <TagComponent />
-        </Grid>
+          <TagComponent size={tagSize} />
+        </div>
       ))}
-    </Grid>
+    </div>
   );
+
   return (
     <div>
       <style>{`
@@ -104,8 +121,8 @@ export default function PrintTags() {
             margin: 0;
             overflow: hidden;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: flex-start;
             page-break-inside: avoid;
             break-inside: avoid;  
           }
@@ -124,8 +141,17 @@ export default function PrintTags() {
         }
       `}</style>
 
-      <Container maxWidth="md" sx={{ mt: 4 }} className="no-print">
-        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+      <Container
+        maxWidth="md"
+        sx={{ mt: 4, display: "flex", flexDirection: "column" }}
+        className="no-print"
+      >
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="flex-end"
+          flexWrap="wrap"
+        >
           <NumberSpinner
             label="Number of pages"
             min={1}
@@ -133,8 +159,30 @@ export default function PrintTags() {
             value={pageCount}
             onValueChange={(value) => handlePageCountChange(value)}
             defaultValue={1}
-            sx={{ height: 56 }}
           />
+          <FormControl size="md" sx={{ minWidth: 150 }}>
+            <FormLabel
+              sx={{
+                display: "inline-block",
+                fontSize: "0.875rem",
+                color: "text.primary",
+                fontWeight: 500,
+                lineHeight: 1.5,
+                mb: 0.5,
+              }}
+            >
+              Tag size
+            </FormLabel>
+            <Select
+              labelId="tag-size-label"
+              value={tagSize}
+              onChange={handleTagSizeChange}
+            >
+              <MenuItem value="sm">Small</MenuItem>
+              <MenuItem value="md">Medium</MenuItem>
+              <MenuItem value="lg">Large</MenuItem>
+            </Select>
+          </FormControl>
           <FormControlLabel
             control={
               <Checkbox
@@ -147,7 +195,7 @@ export default function PrintTags() {
           <Button
             variant="contained"
             onClick={handlePrint}
-            disabled={pageCount <= 0}
+            disabled={safePageCount <= 0}
           >
             Print
           </Button>
