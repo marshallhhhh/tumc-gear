@@ -78,12 +78,16 @@ export function AuthProvider({ children }) {
         const userData = await getMe();
         setUser(userData);
         initialLoadDone.current = true;
-      } catch {
+      } catch (err) {
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
         setAccessToken(null);
-        throw new Error("Account is inactive or deleted.");
+        throw new Error(
+          err.response?.data?.message ||
+            err.message ||
+            "Account is inactive or deleted.",
+        );
       }
     } finally {
       signingIn.current = false;
