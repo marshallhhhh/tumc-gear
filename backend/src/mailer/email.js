@@ -18,16 +18,37 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+Handlebars.registerPartial(
+    "footer",
+    await fs.readFile(
+        path.join(__dirname, "partials", "footer.hbs"),
+        "utf8"
+    )
+);
+
+Handlebars.registerHelper("isMultiple", function (collection) {
+    return collection.length > 1;
+})
+
 async function renderTemplate(templateName, data) {
-    const templatePath = path.join(
-        __dirname,
-        "templates",
-        `${templateName}.hbs`
+    // render the email template
+    const templateSource = await fs.readFile(
+        path.join(__dirname, "templates", `${templateName}.hbs`),
+        "utf8"
     );
 
-    const template = await fs.readFile(templatePath, "utf8");
+    const template = Handlebars.compile(templateSource);
+    const emailBody = template(data);
 
-    return Handlebars.compile(template)(data);
+    // render the base layout
+    const baseLayoutSource = await fs.readFile(
+        path.join(__dirname, "layout.hbs"),
+        "utf8"
+    );
+    
+    const baseLayout = Handlebars.compile(baseLayoutSource);
+
+    return baseLayout({body: emailBody});
 }
 
 export async function sendEmail({

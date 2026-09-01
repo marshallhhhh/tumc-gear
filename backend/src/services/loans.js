@@ -352,3 +352,45 @@ export async function extendLoan(loanId, userId, data, isAdmin = false) {
     throw err;
   }
 }
+
+export async function listUsersWithOverdueLoans(query = {}) {
+  const { page, pageSize, sortBy, sortOrder } = query;
+
+  const {
+    skip,
+    take,
+    orderBy,
+    page: p,
+    pageSize: ps,
+  } = buildPaginationQuery({
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    allowedSortFields: ["fullName", "email", "createdAt"],
+  });
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const loanWhere = { status: "ACTIVE", dueDate: { lt: startOfToday } };
+  const userWhere = { loans: { some: loanWhere } };
+
+  const [users, totalCount] = await Promise.all([
+    prisma.user.findMany({
+      where: userWhere,
+      skip,
+      take,
+      orderBy: orderBy || { fullName: "asc" },
+      include: { loans: { where: loanWhere, include: { item: true } } },
+    }),
+    prisma.user.count({ where: userWhere }),
+  ]);
+
+  const data = users.map((u) => ({
+    user: { id: u.id, email: u.email, fullName: u.fullName },
+    overdueLoans: u.loans,
+  }));
+
+  return { data, ...buildPaginationMeta(p, ps, totalCount) };
+}

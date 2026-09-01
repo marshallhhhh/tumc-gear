@@ -1,18 +1,22 @@
-import { listOverdueLoans } from "../services/loans.js";
+import { listUsersWithOverdueLoans } from "../services/loans.js";
 import { sendEmail } from "../mailer/email.js";
 
 async function main() {
-    const overdueLoans = await listOverdueLoans({ page: 1, pageSize: 1000 });
+    const usersToNotify = await listUsersWithOverdueLoans({ page: 1, pageSize: 1000 });
 
-    for (const loan of overdueLoans.data) {
+    for (const user of usersToNotify.data) {
+        const loanData = user.overdueLoans.map((loan) => ({
+            gearName: loan.item.name,
+            dueDate: loan.dueDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }),
+        }));
+
         await sendEmail({
-            to: loan.user.email,
-            subject: "Your loan is overdue",
+            to: user.user.email,
+            subject: "Your overdue loans",
             template: "overdue-loan",
             data: {
-                name: loan.user.fullName,
-                gearName: loan.item.name,
-                dueDate: loan.dueDate.toLocaleDateString(),
+                name: user.user.fullName,
+                loans: loanData,
             },
         });
     }
