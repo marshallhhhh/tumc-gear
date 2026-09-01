@@ -50,13 +50,11 @@ async function renderTemplate(templateName, data) {
 
 export async function sendEmail({ to, subject, template, data }) {
   const html = await renderTemplate(template, data);
-  console.log(html);
-  /*
+  
   return transporter.sendMail({
     from: env.SMTP_FROM,
     to,
     subject,
     html,
   });
-  */
 }
