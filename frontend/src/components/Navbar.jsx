@@ -55,31 +55,43 @@ export default function Navbar() {
   if (isMobile) {
     if (loading) {
       return (
-        <Paper
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1400,
-            backgroundColor: "primary.main",
-            display: "flex",
-            justifyContent: "space-around",
-            alignItems: "center",
-            // Ensure the bar extends into the safe-area (home indicator)
-            pb: "env(safe-area-inset-bottom, 0px)",
-            // Make a compositing layer to avoid janky movement on scroll
-            transform: "translateZ(0)",
-            // Keep a consistent height including the safe-area inset
-            minHeight: "calc(56px + env(safe-area-inset-bottom, 0px))",
-          }}
-          elevation={3}
-          aria-busy="true"
-        >
-          <Skeleton variant="rounded" width={72} height={36} />
-          <Skeleton variant="rounded" width={72} height={36} />
-          <Skeleton variant="rounded" width={72} height={36} />
-        </Paper>
+        <>
+          <Paper
+            sx={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1400,
+              backgroundColor: "primary.main",
+              // Only pad the bottom for the safe-area; don't change the content height
+              pb: "env(safe-area-inset-bottom, 0px)",
+              transform: "translateZ(0)",
+            }}
+            elevation={3}
+            aria-busy="true"
+          >
+            <Box sx={{ height: "56px", display: "flex", alignItems: "center", justifyContent: "space-around" }}>
+              <Skeleton variant="rounded" width={72} height={36} />
+              <Skeleton variant="rounded" width={72} height={36} />
+              <Skeleton variant="rounded" width={72} height={36} />
+            </Box>
+          </Paper>
+
+          {/* Filler to color the device safe-area (home indicator) */}
+          <Box
+            sx={{
+              position: "fixed",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "env(safe-area-inset-bottom, 0px)",
+              backgroundColor: "primary.main",
+              zIndex: 1399,
+              pointerEvents: "none",
+            }}
+          />
+        </>
       );
     }
 
@@ -244,31 +256,32 @@ function MobileNav({
   moreMenuAnchor,
   setMoreMenuAnchor,
 }) {
-  return (
-    <Paper
-      sx={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1400,
-        backgroundColor: "primary.main",
-        // Extend background into the device safe area and prevent shifting
-        pb: "env(safe-area-inset-bottom, 0px)",
-        transform: "translateZ(0)",
-        minHeight: "calc(56px + env(safe-area-inset-bottom, 0px))",
-      }}
-      elevation={3}
-    >
-      <BottomNavigation
-        showLabels
-        sx={{
-          backgroundColor: "primary.main",
-          height: "56px",
-          pb: "env(safe-area-inset-bottom, 0px)",
-          "& .Mui-selected": { color: "white" },
-        }}
-      >
+    return (
+      <>
+        <Paper
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1400,
+            backgroundColor: "primary.main",
+            // Only pad the bottom for the safe-area; keep the navigation height fixed
+            pb: "env(safe-area-inset-bottom, 0px)",
+            transform: "translateZ(0)",
+          }}
+          elevation={3}
+        >
+          <BottomNavigation
+            showLabels
+            sx={{
+              backgroundColor: "primary.main",
+              // Fixed visible nav height so icons remain vertically centered
+              height: "56px",
+              boxSizing: "border-box",
+              "& .Mui-selected": { color: "white" },
+            }}
+          >
         {!isAuthenticated && [
           <BottomNavigationAction
             key="home"
@@ -461,6 +474,21 @@ function MobileNav({
           </MenuItem>,
         ]}
       </Menu>
-    </Paper>
+        </Paper>
+
+        {/* Filler to color the device safe-area (home indicator) */}
+        <Box
+          sx={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: "env(safe-area-inset-bottom, 0px)",
+            backgroundColor: "primary.main",
+            zIndex: 1399,
+            pointerEvents: "none",
+          }}
+        />
+      </>
   );
 }
