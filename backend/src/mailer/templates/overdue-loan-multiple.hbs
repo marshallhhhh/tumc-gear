@@ -1,0 +1,33 @@
+<h1>You have overdue loans</h1>
+
+<p>Hi {{name}},</p>
+
+{{#if (isMultiple loans)}}
+  <p>
+    You currently have
+    <strong>{{loans.length}}</strong>
+    overdue loans:
+  </p>
+{{else}}
+  <p>
+    You currently have an overdue loan:
+  </p>
+{{/if}}
+
+<ul>
+  {{#each loans}}
+    <li>
+      <strong>{{this.gearName}}</strong>
+      <span> — due {{this.dueDate}}</span>
+    </li>
+  {{/each}}
+</ul>
+
+<p>
+  Please return these to the TUMC as soon as possible.
+</p>
+
+<p>
+  Already returned? Complete the return process on our site
+  <a href="https://gear.tasuniclimbing.club/my-loans">here</a>.
+</p>
