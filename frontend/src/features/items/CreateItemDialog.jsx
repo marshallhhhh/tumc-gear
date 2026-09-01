@@ -95,6 +95,7 @@ export default function CreateItemDialog({ open, onClose, onCreated }) {
           fullWidth
           required
           value={name}
+          margin="normal"
           onChange={(e) => setName(e.target.value)}
         />
 

@@ -116,9 +116,7 @@ export default function UserDetailModal({ user, open, onClose }) {
           sx={{
             flexWrap: "wrap",
             gap: 1,
-            justifyContent: "flex-start",
-            px: 3,
-            pb: 2,
+            justifyContent: "flex-start"
           }}
         >
           <Button

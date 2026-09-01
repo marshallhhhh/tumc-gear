@@ -61,11 +61,17 @@ export default function Navbar() {
             bottom: 0,
             left: 0,
             right: 0,
-            zIndex: 1100,
+            zIndex: 1400,
             backgroundColor: "primary.main",
-            p: 1,
             display: "flex",
             justifyContent: "space-around",
+            alignItems: "center",
+            // Ensure the bar extends into the safe-area (home indicator)
+            pb: "env(safe-area-inset-bottom, 0px)",
+            // Make a compositing layer to avoid janky movement on scroll
+            transform: "translateZ(0)",
+            // Keep a consistent height including the safe-area inset
+            minHeight: "calc(56px + env(safe-area-inset-bottom, 0px))",
           }}
           elevation={3}
           aria-busy="true"
@@ -245,8 +251,12 @@ function MobileNav({
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 1100,
+        zIndex: 1400,
         backgroundColor: "primary.main",
+        // Extend background into the device safe area and prevent shifting
+        pb: "env(safe-area-inset-bottom, 0px)",
+        transform: "translateZ(0)",
+        minHeight: "calc(56px + env(safe-area-inset-bottom, 0px))",
       }}
       elevation={3}
     >
@@ -254,6 +264,8 @@ function MobileNav({
         showLabels
         sx={{
           backgroundColor: "primary.main",
+          height: "56px",
+          pb: "env(safe-area-inset-bottom, 0px)",
           "& .Mui-selected": { color: "white" },
         }}
       >
