@@ -55,25 +55,50 @@ export default function Navbar() {
   if (isMobile) {
     if (loading) {
       return (
-        <Paper
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1100,
-            backgroundColor: "primary.main",
-            p: 1,
-            display: "flex",
-            justifyContent: "space-around",
-          }}
-          elevation={3}
-          aria-busy="true"
-        >
-          <Skeleton variant="rounded" width={72} height={36} />
-          <Skeleton variant="rounded" width={72} height={36} />
-          <Skeleton variant="rounded" width={72} height={36} />
-        </Paper>
+        <>
+          <Paper
+            sx={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1400,
+              backgroundColor: "primary.main",
+              // Only pad the bottom for the safe-area; don't change the content height
+              pb: "env(safe-area-inset-bottom, 0px)",
+              transform: "translateZ(0)",
+            }}
+            elevation={3}
+            aria-busy="true"
+          >
+            <Box
+              sx={{
+                height: "56px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-around",
+              }}
+            >
+              <Skeleton variant="rounded" width={72} height={36} />
+              <Skeleton variant="rounded" width={72} height={36} />
+              <Skeleton variant="rounded" width={72} height={36} />
+            </Box>
+          </Paper>
+
+          {/* Filler to color the device safe-area (home indicator) */}
+          <Box
+            sx={{
+              position: "fixed",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "env(safe-area-inset-bottom, 0px)",
+              backgroundColor: "primary.main",
+              zIndex: 1399,
+              pointerEvents: "none",
+            }}
+          />
+        </>
       );
     }
 
@@ -239,50 +264,81 @@ function MobileNav({
   setMoreMenuAnchor,
 }) {
   return (
-    <Paper
-      sx={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1100,
-        backgroundColor: "primary.main",
-      }}
-      elevation={3}
-    >
-      <BottomNavigation
-        showLabels
+    <>
+      <Paper
         sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1400,
           backgroundColor: "primary.main",
-          "& .Mui-selected": { color: "white" },
+          // Only pad the bottom for the safe-area; keep the navigation height fixed
+          pb: "env(safe-area-inset-bottom, 0px)",
+          transform: "translateZ(0)",
         }}
+        elevation={3}
       >
-        {!isAuthenticated && [
-          <BottomNavigationAction
-            key="home"
-            label="Home"
-            icon={<HomeIcon sx={{ color: "white" }} />}
-            onClick={() => navigate("/home")}
-            sx={{ color: "white" }}
-          />,
-          <BottomNavigationAction
-            key="login"
-            label="Sign In"
-            icon={<LoginIcon sx={{ color: "white" }} />}
-            onClick={() => navigate("/login")}
-            sx={{ color: "white" }}
-          />,
-          <BottomNavigationAction
-            key="signup"
-            label="Sign Up"
-            icon={<SignUpIcon sx={{ color: "white" }} />}
-            onClick={() => navigate("/signup")}
-            sx={{ color: "white" }}
-          />,
-        ]}
+        <BottomNavigation
+          showLabels
+          sx={{
+            backgroundColor: "primary.main",
+            // Fixed visible nav height so icons remain vertically centered
+            height: "56px",
+            boxSizing: "border-box",
+            "& .Mui-selected": { color: "white" },
+          }}
+        >
+          {!isAuthenticated && [
+            <BottomNavigationAction
+              key="home"
+              label="Home"
+              icon={<HomeIcon sx={{ color: "white" }} />}
+              onClick={() => navigate("/home")}
+              sx={{ color: "white" }}
+            />,
+            <BottomNavigationAction
+              key="login"
+              label="Sign In"
+              icon={<LoginIcon sx={{ color: "white" }} />}
+              onClick={() => navigate("/login")}
+              sx={{ color: "white" }}
+            />,
+            <BottomNavigationAction
+              key="signup"
+              label="Sign Up"
+              icon={<SignUpIcon sx={{ color: "white" }} />}
+              onClick={() => navigate("/signup")}
+              sx={{ color: "white" }}
+            />,
+          ]}
 
-        {isAuthenticated &&
-          !isAdmin && [
+          {isAuthenticated &&
+            !isAdmin && [
+              <BottomNavigationAction
+                key="home"
+                label="Borrow"
+                icon={<HomeIcon sx={{ color: "white" }} />}
+                onClick={() => navigate("/home")}
+                sx={{ color: "white" }}
+              />,
+              <BottomNavigationAction
+                key="loans"
+                label="My Loans"
+                icon={<MyLoansIcon sx={{ color: "white" }} />}
+                onClick={() => navigate("/my-loans")}
+                sx={{ color: "white" }}
+              />,
+              <BottomNavigationAction
+                key="more"
+                label="More"
+                icon={<MoreIcon sx={{ color: "white" }} />}
+                onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
+                sx={{ color: "white" }}
+              />,
+            ]}
+
+          {isAdmin && [
             <BottomNavigationAction
               key="home"
               label="Borrow"
@@ -291,10 +347,17 @@ function MobileNav({
               sx={{ color: "white" }}
             />,
             <BottomNavigationAction
-              key="loans"
-              label="My Loans"
-              icon={<MyLoansIcon sx={{ color: "white" }} />}
-              onClick={() => navigate("/my-loans")}
+              key="dash"
+              label="Dashboard"
+              icon={<DashboardIcon sx={{ color: "white" }} />}
+              onClick={() => navigate("/admin/dashboard")}
+              sx={{ color: "white" }}
+            />,
+            <BottomNavigationAction
+              key="gear"
+              label="Gear"
+              icon={<GearIcon sx={{ color: "white" }} />}
+              onClick={() => navigate("/admin/items")}
               sx={{ color: "white" }}
             />,
             <BottomNavigationAction
@@ -305,150 +368,134 @@ function MobileNav({
               sx={{ color: "white" }}
             />,
           ]}
+        </BottomNavigation>
 
-        {isAdmin && [
-          <BottomNavigationAction
-            key="home"
-            label="Borrow"
-            icon={<HomeIcon sx={{ color: "white" }} />}
-            onClick={() => navigate("/home")}
-            sx={{ color: "white" }}
-          />,
-          <BottomNavigationAction
-            key="dash"
-            label="Dashboard"
-            icon={<DashboardIcon sx={{ color: "white" }} />}
-            onClick={() => navigate("/admin/dashboard")}
-            sx={{ color: "white" }}
-          />,
-          <BottomNavigationAction
-            key="gear"
-            label="Gear"
-            icon={<GearIcon sx={{ color: "white" }} />}
-            onClick={() => navigate("/admin/items")}
-            sx={{ color: "white" }}
-          />,
-          <BottomNavigationAction
-            key="more"
-            label="More"
-            icon={<MoreIcon sx={{ color: "white" }} />}
-            onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
-            sx={{ color: "white" }}
-          />,
-        ]}
-      </BottomNavigation>
+        <Menu
+          anchorEl={moreMenuAnchor}
+          open={Boolean(moreMenuAnchor)}
+          onClose={() => setMoreMenuAnchor(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          {isAuthenticated && [
+            <MenuItem
+              key="myloans"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/my-loans");
+              }}
+            >
+              <ListItemIcon>
+                <MyLoansIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>My Loans</ListItemText>
+            </MenuItem>,
+          ]}
+          {isAdmin && [
+            <MenuItem
+              key="users"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/admin/users");
+              }}
+            >
+              <ListItemIcon>
+                <UsersIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Members</ListItemText>
+            </MenuItem>,
+            <MenuItem
+              key="allloans"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/admin/loans");
+              }}
+            >
+              <ListItemIcon>
+                <LoansIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>All Loans</ListItemText>
+            </MenuItem>,
+            <MenuItem
+              key="overdue"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/admin/loans?overdue=true");
+              }}
+            >
+              <ListItemIcon>
+                <OverdueIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Overdue Loans</ListItemText>
+            </MenuItem>,
+            <MenuItem
+              key="reports"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/admin/found-reports");
+              }}
+            >
+              <ListItemIcon>
+                <ReportsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Found Reports</ListItemText>
+            </MenuItem>,
+            <MenuItem
+              key="print-tags"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/print-tags");
+              }}
+            >
+              <ListItemIcon>
+                <PrintIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Print Tags</ListItemText>
+            </MenuItem>,
+          ]}
+          {isAuthenticated && [
+            <Divider key="div" />,
+            <MenuItem
+              key="profile"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                navigate("/profile");
+              }}
+            >
+              <ListItemIcon>
+                <PersonIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>My Profile</ListItemText>
+            </MenuItem>,
+            <MenuItem
+              key="signout"
+              onClick={() => {
+                setMoreMenuAnchor(null);
+                onSignOut();
+              }}
+            >
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Sign Out</ListItemText>
+            </MenuItem>,
+          ]}
+        </Menu>
+      </Paper>
 
-      <Menu
-        anchorEl={moreMenuAnchor}
-        open={Boolean(moreMenuAnchor)}
-        onClose={() => setMoreMenuAnchor(null)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        transformOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        {isAuthenticated && [
-          <MenuItem
-            key="myloans"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/my-loans");
-            }}
-          >
-            <ListItemIcon>
-              <MyLoansIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>My Loans</ListItemText>
-          </MenuItem>,
-        ]}
-        {isAdmin && [
-          <MenuItem
-            key="users"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/admin/users");
-            }}
-          >
-            <ListItemIcon>
-              <UsersIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Members</ListItemText>
-          </MenuItem>,
-          <MenuItem
-            key="allloans"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/admin/loans");
-            }}
-          >
-            <ListItemIcon>
-              <LoansIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>All Loans</ListItemText>
-          </MenuItem>,
-          <MenuItem
-            key="overdue"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/admin/loans?overdue=true");
-            }}
-          >
-            <ListItemIcon>
-              <OverdueIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Overdue Loans</ListItemText>
-          </MenuItem>,
-          <MenuItem
-            key="reports"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/admin/found-reports");
-            }}
-          >
-            <ListItemIcon>
-              <ReportsIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Found Reports</ListItemText>
-          </MenuItem>,
-          <MenuItem
-            key="print-tags"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/print-tags");
-            }}
-          >
-            <ListItemIcon>
-              <PrintIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Print Tags</ListItemText>
-          </MenuItem>,
-        ]}
-        {isAuthenticated && [
-          <Divider key="div" />,
-          <MenuItem
-            key="profile"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              navigate("/profile");
-            }}
-          >
-            <ListItemIcon>
-              <PersonIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>My Profile</ListItemText>
-          </MenuItem>,
-          <MenuItem
-            key="signout"
-            onClick={() => {
-              setMoreMenuAnchor(null);
-              onSignOut();
-            }}
-          >
-            <ListItemIcon>
-              <LogoutIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Sign Out</ListItemText>
-          </MenuItem>,
-        ]}
-      </Menu>
-    </Paper>
+      {/* Filler to color the device safe-area (home indicator) */}
+      <Box
+        sx={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: "env(safe-area-inset-bottom, 0px)",
+          backgroundColor: "primary.main",
+          zIndex: 1399,
+          pointerEvents: "none",
+        }}
+      />
+    </>
   );
 }

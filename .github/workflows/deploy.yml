@@ -25,12 +25,6 @@ jobs:
             cd /opt/apps/tumc-gear
             git pull origin main
 
-            # install only the frontend workspace and build it
-            npm ci --workspace frontend
-            npm run --workspace frontend build
-            rm -rf /var/www/tumc-gear/*
-            cp -r frontend/dist/* /var/www/tumc-gear/
-
             # rebuild backend container
             cd /opt/apps/supabase
             docker compose up -d --force-recreate --no-deps backend

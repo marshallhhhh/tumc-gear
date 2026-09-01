@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "cd ./backend && npm run dev",
-    "frontend": "cd ./frontend && npm run dev",
+    "frontend": "cd ./frontend && npm run dev -- --host",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
