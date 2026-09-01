@@ -97,6 +97,7 @@ export async function updateUser(id, data, adminId) {
   if (data.email !== undefined) updateData.email = data.email;
   if (data.role !== undefined) updateData.role = data.role;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.lastOverdueEmailSentAt !== undefined) updateData.lastOverdueEmailSentAt = data.lastOverdueEmailSentAt;
 
   return prisma.user.update({ where: { id }, data: updateData });
 }

@@ -354,7 +354,13 @@ export async function extendLoan(loanId, userId, data, isAdmin = false) {
 }
 
 export async function listUsersWithOverdueLoans(query = {}) {
-  const { page, pageSize, sortBy, sortOrder } = query;
+  const {
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    lastOverdueEmailSentOlderThanDays,
+  } = query;
 
   const {
     skip,
@@ -374,7 +380,31 @@ export async function listUsersWithOverdueLoans(query = {}) {
   startOfToday.setHours(0, 0, 0, 0);
 
   const loanWhere = { status: "ACTIVE", dueDate: { lt: startOfToday } };
-  const userWhere = { loans: { some: loanWhere } };
+
+  // Base user filter: users who have at least one overdue loan
+  let userWhere = { loans: { some: loanWhere } };
+
+  // Optional: filter by lastOverdueEmailSentAt being older than N days (or never sent)
+  if (typeof lastOverdueEmailSentOlderThanDays !== "undefined") {
+    const daysNum = Number(lastOverdueEmailSentOlderThanDays);
+    if (!Number.isNaN(daysNum) && isFinite(daysNum) && daysNum >= 0) {
+      const cutoff = new Date(Date.now() - daysNum * 24 * 3600 * 1000);
+
+      // Combine the overdue-loan requirement with an OR for email timestamp:
+      // include users whose lastOverdueEmailSentAt is null (never sent) OR older than cutoff.
+      userWhere = {
+        AND: [
+          { loans: { some: loanWhere } },
+          {
+            OR: [
+              { lastOverdueEmailSentAt: null },
+              { lastOverdueEmailSentAt: { lt: cutoff } },
+            ],
+          },
+        ],
+      };
+    }
+  }
 
   const [users, totalCount] = await Promise.all([
     prisma.user.findMany({
