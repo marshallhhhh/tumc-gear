@@ -17,7 +17,7 @@ export default function AdminRoute({ children }) {
       </Box>
     );
   }
-  /*
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -25,6 +25,6 @@ export default function AdminRoute({ children }) {
   if (!isAdmin) {
     return <Navigate to="/home" replace />;
   }
-  */
+  
   return children;
 }

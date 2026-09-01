@@ -5,14 +5,19 @@ import Footer from "../components/Footer";
 
 export default function MainLayout() {
   return (
-    <Box display="flex" flexDirection="column" minHeight="100vh">
+    <Box
+      display="flex"
+      flexDirection="column"
+      minHeight="100dvh"
+      sx={{ width: "100%", overflowX: "hidden", overscrollBehavior: "none" }}
+    >
       <Navbar />
       <Box
         component="main"
         flexGrow={1}
         display="flex"
         flexDirection="column"
-        sx={{ pb: 2 }}
+        sx={{ pb: 2, overflowX: "hidden", overscrollBehavior: "none" }}
       >
         <Outlet />
       </Box>
