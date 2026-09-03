@@ -16,14 +16,15 @@ import {
 
 export default function Login() {
   const { signIn, resetPassword } = useAuth();
-  const { notify } = useNotification();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(location.state?.email || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   const returnUrl = location.state?.from || "/home";
 
@@ -32,18 +33,22 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
+    if (!email) {
+      setError("Please enter your email address first");
+      return;
+    }
     if (!isValidEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
-
-    setLoading(true);
     try {
-      await signIn(email, password);
-      navigate(returnUrl, { replace: true });
+      await resetPassword(email);
+      setMessage("Check your email for a reset link", "success");
+      setEmail("");
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -69,7 +74,7 @@ export default function Login() {
         }}
       >
         <Typography variant="h4" gutterBottom>
-          Log In
+          Forgot Password
         </Typography>
         <Paper sx={{ p: 3, width: "100%" }} elevation={2}>
           <Box
@@ -88,51 +93,24 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
             />
-            <Box display="flex" flexDirection="column" gap={1}>
-              <TextField
-                label="Password"
-                type="password"
-                fullWidth
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-              <Link
-                width="100%"
-                underline="none"
-                component={RouterLink}
-                type="button"
-                variant="body2"
-                to="/forgot-password"
-                state={{ email }}
-                sx={{ display: "flex", justifyContent: "flex-end" }}
-              >
-                Forgot password?
-              </Link>
-            </Box>
             {error && (
-              <Alert severity="error" sx={{ mt: 1 }}>
+              <Alert severity="error">
                 {error}
+              </Alert>
+            )}
+            {message && (
+              <Alert severity="success">
+                {message}
               </Alert>
             )}
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              disabled={loading || !email || !password}
+              disabled={loading || !email}
             >
-              {loading ? <CircularProgress size={24} /> : "Sign In"}
+              {loading ? <CircularProgress size={24} /> : "Send Reset Email"}
             </Button>
-            <Link
-              underline="none"
-              component={RouterLink}
-              to="/signup"
-              variant="body2"
-              sx={{ display: "flex", justifyContent: "center" }}
-            >
-              Don&apos;t have an account? Sign up
-            </Link>
           </Box>
         </Paper>
       </Box>
