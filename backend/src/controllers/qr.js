@@ -2,7 +2,9 @@ import * as qrService from "../services/qr.js";
 
 export async function resolve(req, res, next) {
   try {
-    const item = await qrService.resolveQr(req.body.nanoid);
+    const item = await qrService.resolveQr(req.body.nanoid, {
+      isAuthenticated: Boolean(req.user),
+    });
     res.json(item);
   } catch (err) {
     next(err);

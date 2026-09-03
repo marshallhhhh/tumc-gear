@@ -14,6 +14,7 @@ export async function get(req, res, next) {
     const isAdmin = req.user?.role === "ADMIN";
     const item = await itemService.getItem(req.params.id, {
       isAdmin,
+      isAuthenticated: Boolean(req.user),
       userId: req.user?.id,
       includeLoans: req.query.includeLoans === "true",
       includeFoundReports: req.query.includeFoundReports === "true",
