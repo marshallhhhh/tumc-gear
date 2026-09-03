@@ -21,7 +21,9 @@ const updateSchema = z.object({
  *   get:
  *     tags: [Categories]
  *     summary: List all categories
- *     description: Public endpoint — returns all non-deleted categories.
+ *     description: Requires authentication — returns all non-deleted categories.
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Array of categories
@@ -31,8 +33,14 @@ const updateSchema = z.object({
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Category'
+ *       401:
+ *         description: Missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get("/", ctrl.list);
+router.get("/", authenticate, ctrl.list);
 
 /**
  * @swagger

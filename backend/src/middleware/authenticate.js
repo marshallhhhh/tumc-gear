@@ -62,12 +62,43 @@ export async function authenticate(req, _res, next) {
           err instanceof Prisma.PrismaClientKnownRequestError &&
           err.code === "P2002"
         ) {
-          // Concurrent request already created this user — re-fetch
-          user = await prisma.user.findUnique({ where: { id: userId } });
+          // `meta.target` is an array of field names for Prisma-managed
+          // constraints and an index name string for the manual partial indexes.
+          const target = String(err.meta?.target ?? "");
+
+          if (target.includes("email")) {
+            // A different live Supabase identity already holds this address.
+            // This is a real conflict, not a race, and retrying cannot fix it.
+            return next(
+              new AppError(
+                409,
+                "CONFLICT",
+                "This email address is already registered to another account. Please contact an administrator.",
+              ),
+            );
+          }
+
+          // Concurrent request already created this user — re-fetch. Must match
+          // the lookup above so a soft-deleted row is rejected below rather than
+          // being filtered out and dereferenced as null.
+          user = await prisma.user.findUnique({
+            where: { id: userId },
+            includeDeleted: true,
+          });
         } else {
           throw err;
         }
       }
+    }
+
+    if (!user) {
+      return next(
+        new AppError(
+          500,
+          "INTERNAL_ERROR",
+          "Failed to provision user account.",
+        ),
+      );
     }
 
     if (user.deletedAt || !user.isActive) {
@@ -78,7 +109,8 @@ export async function authenticate(req, _res, next) {
 
     req.user = user;
     next();
-  } catch {
+  } catch (err) {
+    if (err instanceof AppError) return next(err);
     next(new AppError(500, "INTERNAL_ERROR", "Internal server error."));
   }
 }

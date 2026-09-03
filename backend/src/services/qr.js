@@ -1,11 +1,12 @@
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import { toPublicItem } from "./items.js";
 import {
   buildPaginationQuery,
   buildPaginationMeta,
 } from "../utils/pagination.js";
 
-export async function resolveQr(nanoid) {
+export async function resolveQr(nanoid, { isAuthenticated = false } = {}) {
   const qrTag = await prisma.qrTag.findUnique({
     where: { nanoid },
     include: { item: { include: { category: true } } },
@@ -19,7 +20,7 @@ export async function resolveQr(nanoid) {
     );
   }
 
-  return qrTag.item;
+  return isAuthenticated ? qrTag.item : toPublicItem(qrTag.item);
 }
 
 export async function createQrTag(nanoid) {

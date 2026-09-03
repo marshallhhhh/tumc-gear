@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "node --watch --env-file .env src/server.js",
     "test": "vitest",
-    "db:migrate": "npx prisma migrate deploy && npx prisma db execute --file prisma/manual_indexes.sql"
+    "db:migrate": "npx prisma migrate deploy && npx prisma db execute --schema prisma/schema.prisma --file prisma/manual_indexes.sql"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

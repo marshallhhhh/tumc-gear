@@ -4,9 +4,15 @@ import { authenticate } from "../middleware/authenticate.js";
 import { optionalAuth } from "../middleware/optionalAuth.js";
 import { requireRole } from "../middleware/requireRole.js";
 import { validate } from "../middleware/validate.js";
+import { publicRateLimiter } from "../middleware/rateLimiter.js";
 import * as ctrl from "../controllers/items.js";
 
 const router = Router();
+
+// Anonymous item reads are the QR-landing entry point and must stay public,
+// so they are rate-limited instead. Authenticated callers are exempt.
+const anonymousRateLimiter = (req, res, next) =>
+  req.user ? next() : publicRateLimiter(req, res, next);
 
 const createSchema = z.object({
   name: z.string().min(1).max(200),
@@ -50,7 +56,9 @@ const listQuerySchema = z
  *     summary: Get an item by ID or shortId
  *     description: |
  *       Public endpoint with optional auth. Accepts a UUID or shortId (e.g. `AUD-001`).
- *       Authenticated non-admin users receive `activeLoan` if present.
+ *       Unauthenticated callers receive a reduced projection (no `serialNumber`, no `qrTag`,
+ *       no internal metadata) and are rate-limited.
+ *       Authenticated non-admin users receive the full item plus `activeLoan` if present.
  *       Admins may opt-in to `loans[]` via `?includeLoans=true` and `foundReports[]` via `?includeFoundReports=true`.
  *     security:
  *       - {}
@@ -87,8 +95,20 @@ const listQuerySchema = z
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: Rate limit exceeded (unauthenticated callers)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id", optionalAuth, validate(getQuerySchema, "query"), ctrl.get);
+router.get(
+  "/:id",
+  optionalAuth,
+  anonymousRateLimiter,
+  validate(getQuerySchema, "query"),
+  ctrl.get,
+);
 
 /**
  * @swagger

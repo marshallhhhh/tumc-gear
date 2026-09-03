@@ -1,101 +1,118 @@
-# TUMC Gear V2 — Project Guidelines
+# TUMC Gear — Copilot Instructions
 
-Gear management system for TUMC: track inventory items, QR tags, loans, and found-item reports.
+## What this application is
 
-## Accepting The Users Prompts
+A climbing-club gear management system ("TUMC Gear"). It tracks inventory items, categories, printed QR tags, loans (checkout/return/cancel), and found-item reports, with an admin dashboard and overdue-loan email reminders.
 
-When you recieve a prompt from the users, you should validate the prompt to ensure that it is clear and specific. If the prompt is vague or ambiguous, you should ask the user for clarification before proceeding. This will help you provide a more accurate and helpful response.
+## Stack
 
-If you believe the user's prompt is inappropriate or violates any guidelines, you should politely inform the user and make alternative suggestions if possible.
+- **Monorepo**: npm workspaces (`backend`, `frontend`) at repo root. All packages are ESM (`"type": "module"`).
+- **Frontend**: React 19 + Vite 7, MUI 7 (`@mui/material`, `@emotion`), React Router 7, TanStack Query 5, axios, `@supabase/supabase-js`, leaflet/react-leaflet (maps), `html5-qrcode` (scanning), `qrcode.react` + `nanoid` (tag generation). Plain JS/JSX — no TypeScript.
+- **Backend**: Node 22 + Express 5, `zod` (imported as `zod/v4`), `pino`/`pino-http` logging, `helmet`, `cors`, `express-rate-limit`, `jose` (JWT verify), `nodemailer` + Handlebars templates, `swagger-jsdoc`/`swagger-ui-express`.
+- **Database**: PostgreSQL (Supabase) via **Prisma 5** (`backend/prisma/schema.prisma`). Uses both `DATABASE_URL` (pooled) and `DIRECT_URL`.
 
-## Architecture
+## Authentication & authorization
 
-Monorepo with two independent apps sharing Supabase auth:
+- Auth is delegated to **Supabase Auth**. The frontend signs in with `supabase.auth.signInWithPassword` and stores the session; `AuthContext` pushes the access token into the axios client via `setAccessToken()` (do **not** call `supabase.auth.getSession()` per request).
+- The backend never issues tokens. `authenticate` middleware verifies the Supabase JWT against the remote JWKS (`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`), with `issuer` and `audience: "authenticated"` checks.
+- On first authenticated request, the middleware **just-in-time provisions** a local `User` row keyed by the Supabase UUID (`payload.sub`); a missing `full_name` in user metadata yields `403 PROFILE_INCOMPLETE`. Inactive/soft-deleted users get `401`.
+- Roles are `MEMBER` and `ADMIN` on the local `User` model. Authorization is enforced by `requireRole("ADMIN")` on routes. `optionalAuth` is used where responses vary for anonymous vs authenticated callers.
+- Frontend route guards: `ProtectedRoute` and `AdminRoute` — these are UX only; **the backend is the security boundary**.
 
-| Layer        | Stack                                                              | Entry                  |
-| ------------ | ------------------------------------------------------------------ | ---------------------- |
-| **Backend**  | Express 5 (ESM) · Prisma 5 · PostgreSQL · Zod 4 · Pino             | `backend/src/app.js`   |
-| **Frontend** | React 19 · Vite 8 · MUI 7 · React Query 5 · Axios · React Router 7 | `frontend/src/App.jsx` |
+## API architecture
 
-**Auth flow:** Supabase issues JWTs → backend verifies via JWKS → role stored in DB (not token) → first auth auto-provisions user as MEMBER.
+- REST, mounted in `backend/src/routes/index.js`: `/health`, `/categories`, `/item`, `/items`, `/qr`, `/loans`, `/users`, `/found-reports`, `/dashboard`.
+- Strict layering — keep it: **route → middleware (`authenticate`/`optionalAuth`/`requireRole`/`validate`) → controller → service → prisma**. Controllers are thin (`try/catch` + `next(err)`); all business logic and Prisma access live in `src/services/*`.
+- Validation: zod schemas are declared inline in the route file and applied with `validate(schema, "body" | "params" | "query")`. Note: for `source === "query"` the parsed result is **not** written back (Express 5 `req.query` is read-only).
+- Errors: throw `new AppError(statusCode, ERROR_CODE, message, details)`. The `errorHandler` returns a consistent envelope `{ error, message, details }` with UPPER_SNAKE_CASE codes (`BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMITED`, `INTERNAL_ERROR`). Unhandled errors are logged and returned as generic `500` — never leak internals.
+- Pagination: use `buildPaginationQuery` / `buildPaginationMeta` from `src/utils/pagination.js` (max `pageSize` 100, sort fields must be allow-listed).
+- Every route is documented with `@swagger` JSDoc blocks; Swagger UI is served at `/api-docs` **only when `NODE_ENV !== "production"`**. Keep new/changed endpoints documented.
+- Rate limiting: `globalRateLimiter` is applied app-wide; `publicRateLimiter` (stricter) is applied to unauthenticated public endpoints (QR resolution, found-report submission).
 
-### Backend layers
+## Data model constraints
+
+- **Soft delete** is implemented as a Prisma client extension in `src/config/prisma.js` for `User`, `Item`, `Category`, `Loan`, `FoundReport`. `findMany`/`findFirst`/`findUnique`/`count` automatically filter `deletedAt: null`. Pass `includeDeleted: true` in the query args to bypass it (used for uniqueness checks). `create`/`update`/`delete` are **not** intercepted — deletes must set `deletedAt` in the service.
+- `Loan` is the source of truth for item availability. **One ACTIVE loan per item** is enforced by a partial unique index in `backend/prisma/manual_indexes.sql` (not expressible in Prisma). Similar partial unique indexes limit open found reports per item/reporter. After `prisma migrate deploy`, `manual_indexes.sql` must also be executed (`npm run db:migrate` in `backend` does both).
+- Items have a human-readable `shortId` (VarChar 11) built from a 3-char auto-generated unique `Category.prefix`; QR tags have a 6-char unique `nanoid`. Frontend routes use these: `/item/:shortId`, `/t/:nanoid`.
+
+## Directory structure
 
 ```
-Route  →  Middleware (auth, validate, rateLimit)  →  Controller (thin)  →  Service (business logic)  →  Prisma
+backend/src/
+  app.js server.js            # express app / listener
+  config/  env.js jwks.js logger.js prisma.js swagger.js
+  routes/ controllers/ services/   # one file per resource, same names
+  middleware/ authenticate optionalAuth requireRole validate errorHandler rateLimiter
+  mailer/  email.js layout.hbs partials/ templates/
+  jobs/    overdueReminders.js      # standalone script, run via cron
+  utils/   AppError.js pagination.js
+backend/prisma/  schema.prisma migrations/ manual_indexes.sql
+frontend/src/
+  services/   # axios wrappers per resource + api.js + supabase.js
+  hooks/      # TanStack Query hooks per resource (use*.js)
+  features/   # resource-specific composite UI (items, loans, users, tags, foundReports)
+  components/ pages/ pages/admin/ layouts/ routes/ context/ utils/ theme.js
 ```
 
-Each domain (items, loans, users, categories, qr, foundReports, dashboard) follows this pattern across `routes/`, `controllers/`, `services/`.
+Frontend data flow convention: `services/*.js` (axios) → `hooks/use*.js` (`useQuery`/`useMutation`, array query keys like `["categories"]`, invalidate on success) → components. Do not call axios directly from components.
 
-### Frontend layers
+## Environment
 
-```
-Page/Feature  →  Custom Hook (React Query)  →  Service (Axios wrapper)  →  api.js (interceptors)
-```
+- Backend (`backend/.env`, validated by zod in `src/config/env.js` — process exits on invalid): `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `CORS_ORIGINS` (comma-separated), `PORT` (default 3000), `NODE_ENV`, optional `SMTP_*`. Add any new env var to the schema.
+- Frontend (`frontend/.env`, see `frontend/.env.example`): `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_APP_URL`, `VITE_APP_TITLE`, `VITE_FOOTER_TEXT`. Only `VITE_`-prefixed vars reach the browser — never put secrets there.
 
-## Build & Dev
+## Running, building, testing, linting
 
 ```bash
-# Backend
-cd backend
-npm run dev          # nodemon + .env auto-loaded
-npm start            # production
-npm test             # vitest
+npm run dev                 # root: backend (node --watch) + frontend (vite --host) concurrently
+npm run lint                # root: eslint . (flat config, eslint.config.js)
+npm run lint:fix
+npm run format:check        # root: prettier --check .
+npm run format
 
-# Frontend
-cd frontend
-npm run dev          # Vite HMR
-npm run build        # production → dist/
-npm run lint         # ESLint 9 flat config
+cd backend && npm run dev   # node --watch --env-file .env src/server.js
+cd backend && npm start     # node src/server.js
+cd backend && npm run db:migrate   # prisma migrate deploy + manual_indexes.sql
+cd backend && npx prisma generate  # after schema changes
+cd backend && npm test      # vitest (configured; no test files committed yet)
+
+cd frontend && npm run build     # vite build  (the only build step in the repo)
+cd frontend && npm run preview
+cd frontend && npm test          # node --test (configured; no test files committed yet)
 ```
 
-## Key Conventions
+There is **no TypeScript and no typecheck step**. There is currently **no committed test suite** — do not claim tests pass; if you add tests, use `vitest` + `supertest` on the backend and `node --test` on the frontend, matching the configured runners.
 
-### Backend
+### Validating changes
 
-- **ES Modules everywhere** — `type: "module"` in package.json; use `.js` extensions in imports.
-- **Validation** — Zod schemas in route files; applied via `validate(schema, source)` middleware. Return 400 with field-level errors.
-- **Error handling** — Throw `AppError(statusCode, errorCode, message, details)`. Error codes are UPPER_SNAKE_CASE. The global error handler formats the response as `{ error, message, details }`.
-- **Soft-delete** — Prisma `$extends` auto-filters `deletedAt IS NULL`. Pass `{ includeDeleted: true }` to bypass. All soft-deletable models have a `deletedAt` field.
-- **Pagination** — Use `buildPaginationQuery(query)` and `buildPaginationMeta(page, pageSize, totalCount)` from `utils/pagination.js`. Called in the service layer. Response shape is flat: `{ data, page, pageSize, totalCount, totalPages }`.
-- **Rate limiting** — Public endpoints (QR resolve, found reports) limited to 5 req/hr per IP.
-- **HTTP status codes** — 201 for creates, 204 for deletes, 409 for uniqueness conflicts, 422 for business-rule violations. See `backend/docs/system-spec-backend.md`.
+Always run, from the repo root:
 
-### Frontend
+```bash
+npm run lint && npm run format:check
+```
 
-- **Data fetching** — Always use React Query hooks (`useQuery`/`useMutation`). Invalidate related query keys on mutation success. staleTime: 30s for lists, 60s for details.
-- **Notifications** — Use `useNotification()` hook → `notify(message, severity)`. Severity: success | error | warning | info.
-- **Auth** — Use `useAuth()` from `AuthContext`. Properties: `user`, `session`, `isAdmin`, `isMember`, `isAuthenticated`.
-- **UI components** — MUI with `sx` prop for styling. Reusable components in `components/` (DataTable, StatusChip, ConfirmDialog, LocationMinimap, QrScanner, PageSkeleton).
-- **Loading states** — Use `<PageSkeleton />` for full-page loading. MUI Skeleton for inline.
-- **Routing** — Public routes render directly. Protected routes use `<ProtectedRoute>`. Admin routes use `<AdminRoute>`.
+Plus `cd frontend && npm run build` for frontend changes, and `cd backend && npx prisma validate` (and `npx prisma generate`) for schema changes. CI (`.github/workflows/ci.yml`) runs only ESLint + Prettier on PRs to `main`, so those must pass.
 
-## Environment Variables
+## Infrastructure / deployment
 
-### Backend (.env)
+- `.github/workflows/deploy.yml`: on pushes to `main` touching `backend/**`, SSHes to the VPS, pulls `/opt/apps/tumc-gear`, builds the backend image, runs `npm run db:migrate` in a one-off backend container, and recreates the backend service from the compose project in `/opt/apps/supabase`. `prisma-migrate.yml` is a manual (`workflow_dispatch`) migration job.
+- `backend/Dockerfile`: `node:22-slim`, installs `openssl` (Prisma requirement), runs `npx prisma generate`, exposes 3000, `npm start`. Root `docker-compose.yml` builds `./backend` with `env_file: ./backend/.env`.
+- The frontend is a static Vite build; it is not part of the backend deploy workflow.
+- `backend/src/jobs/overdueReminders.js` is a one-shot script (calls `main()` on import) intended to be scheduled externally; it emails users with loans overdue when no reminder was sent in the last 2 days and stamps `User.lastOverdueEmailSentAt`.
 
-`DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `CORS_ORIGINS`, `PORT` (default 3000), `NODE_ENV`
+## Coding conventions actually used here
 
-### Frontend (.env)
+- ESM `import`/`export` everywhere; backend relative imports include the `.js` extension, frontend imports omit extensions.
+- Named exports for services/controllers/middleware/hooks; controllers import services as `import * as xService from "../services/x.js"`, routes import controllers as `import * as ctrl from ...`.
+- Prettier defaults with `endOfLine: "lf"` (`.prettierrc`); double quotes, semicolons, trailing commas as produced by Prettier.
+- ESLint flat config: `js/recommended` + `eslint-plugin-react` (React 19, `react-in-jsx-scope` and `prop-types` off). Unused vars are errors unless prefixed with `_` — hence `_req`, `_res`, `_next`.
+- Zod is imported from `"zod/v4"` on the backend.
+- Comments are used sparingly to explain non-obvious workarounds; keep that style rather than commenting every line.
 
-`VITE_API_URL`, `VITE_APP_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+## Security assumptions
 
-## Documentation
-
-- [backend/docs/system-spec-backend.md](backend/docs/system-spec-backend.md) — Full backend spec: API reference, business rules, state machines, roles & permissions, error codes, schema outline.
-- [backend/prisma/schema.prisma](backend/prisma/schema.prisma) — Database schema (models: User, Item, QrTag, Category, Loan, FoundReport).
-
-## Domain Model (quick reference)
-
-| Model           | Key rules                                                                               |
-| --------------- | --------------------------------------------------------------------------------------- |
-| **Item**        | Has shortId (`{PREFIX}-{###}`, auto-generated). Cannot delete while active loan exists. |
-| **QrTag**       | 6-char nanoid, 1:1 with Item. Immutable once created.                                   |
-| **Category**    | Unique name + 3-char prefix. Cannot delete if items exist.                              |
-| **Loan**        | One ACTIVE loan per item. Max 30 days. Requires geolocation on checkout/return.         |
-| **FoundReport** | Unique per (itemId, reportedBy, status). Only admins close.                             |
-| **User**        | Auto-created on first auth. Role: MEMBER (default) or ADMIN. Soft-deletable.            |
-
-## Closing Remarks
-
-Include a quote from a famous Chinese historical figure (e.g. Sun Tzu, Confucius, Deng Xiaoping) at the end of every chat response. This should have no effect on the content of your response, and should be clearly separated from the main content. I just want it included as a fun easter egg for anyone reading the responses.
+- All trust decisions are made server-side from the verified JWT (`req.user`), never from client-supplied ids or roles.
+- The Supabase anon key is public by design; service-role keys and SMTP credentials must stay in backend `.env` only.
+- CORS is restricted to `CORS_ORIGINS`; `helmet` is enabled; rate limiters guard public endpoints — do not remove or loosen these.
+- Never expose Swagger UI, stack traces, or Prisma error internals in production responses.
+- Prefer Prisma query builders (parameterized). Raw SQL is confined to `manual_indexes.sql`.

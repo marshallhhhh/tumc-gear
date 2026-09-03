@@ -8,30 +8,6 @@ on:
       - "backend/**"
 
 jobs:
-  migrate:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Prisma Migrate
-        run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DATABASE_URL }}
-
   deploy:
     environment: production
     runs-on: ubuntu-latest
@@ -51,6 +27,19 @@ jobs:
             cd /opt/apps/tumc-gear
             git pull origin main
 
-            # rebuild backend container
             cd /opt/apps/supabase
+
+            # Rebuild the backend image with the latest code first, so the
+            # migration below runs against the current migrations directory.
+            docker compose build backend
+
+            # The DB is only reachable from inside the VPS's docker network now,
+            # so run the migration as a one-off container on that network rather
+            # than from the GitHub runner. db:migrate runs `prisma migrate deploy`
+            # and then applies manual_indexes.sql (partial unique indexes that
+            # can't be expressed in the Prisma schema; all statements are
+            # IF NOT EXISTS guarded and therefore idempotent).
+            docker compose run --rm --no-deps backend npm run db:migrate
+
+            # recreate the backend container with the newly built image
             docker compose up -d --force-recreate --no-deps backend

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod/v4";
 import { authenticate } from "../middleware/authenticate.js";
+import { optionalAuth } from "../middleware/optionalAuth.js";
 import { requireRole } from "../middleware/requireRole.js";
 import { validate } from "../middleware/validate.js";
 import { publicRateLimiter } from "../middleware/rateLimiter.js";
@@ -53,7 +54,12 @@ const listQuerySchema = z
  *   post:
  *     tags: [QR Tags]
  *     summary: Resolve a QR tag to an item
- *     description: Public, rate-limited (5 req/hr per IP). Given a nanoid, returns the associated item or 404.
+ *     description: |
+ *       Public, rate-limited. Given a nanoid, returns the associated item or 404.
+ *       Unauthenticated callers receive a reduced projection (no `serialNumber`, no `qrTag`).
+ *     security:
+ *       - {}
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -97,6 +103,7 @@ const listQuerySchema = z
 router.post(
   "/resolve",
   publicRateLimiter,
+  optionalAuth,
   validate(resolveSchema),
   ctrl.resolve,
 );

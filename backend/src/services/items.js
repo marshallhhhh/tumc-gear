@@ -49,10 +49,27 @@ export async function createItem(data) {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Reduced projection for unauthenticated callers: omits serialNumber, qrTag
+// and internal metadata so the inventory cannot be harvested anonymously.
+// Keeps the fields the public QR-landing and found-report flows rely on.
+export function toPublicItem(item) {
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description ?? null,
+    shortId: item.shortId,
+    category: item.category
+      ? { id: item.category.id, name: item.category.name }
+      : null,
+    activeLoan: item.activeLoan ?? null,
+  };
+}
+
 export async function getItem(
   identifier,
   {
     isAdmin = false,
+    isAuthenticated = false,
     userId,
     includeLoans = false,
     includeFoundReports = false,
@@ -85,7 +102,7 @@ export async function getItem(
     throw new AppError(404, "NOT_FOUND", "Item not found.");
   }
 
-  // When full loans are already included, return as-is
+  // When full loans are already included, return as-is (admin only)
   if (include.loans) {
     return item;
   }
@@ -102,15 +119,17 @@ export async function getItem(
     },
   });
 
-  if (activeLoan) {
-    const isOwnLoan = userId && activeLoan.userId === userId;
-    return {
-      ...item,
-      activeLoan: isOwnLoan ? activeLoan : { status: activeLoan.status },
-    };
-  }
+  const result = activeLoan
+    ? {
+        ...item,
+        activeLoan:
+          userId && activeLoan.userId === userId
+            ? activeLoan
+            : { status: activeLoan.status },
+      }
+    : { ...item, activeLoan: null };
 
-  return { ...item, activeLoan: null };
+  return isAuthenticated ? result : toPublicItem(result);
 }
 
 export async function updateItem(id, data) {

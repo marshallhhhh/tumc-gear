@@ -83,9 +83,10 @@ export async function updateUser(id, data, adminId) {
   }
 
   if (data.email !== undefined && data.email !== user.email) {
-    const existing = await prisma.user.findUnique({
+    // Uniqueness is scoped to live rows by the `one_active_user_per_email`
+    // partial index, so soft-deleted holders of the address do not conflict.
+    const existing = await prisma.user.findFirst({
       where: { email: data.email },
-      includeDeleted: true,
     });
     if (existing) {
       throw new AppError(409, "CONFLICT", "Email is already in use.");
