@@ -95,11 +95,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signUp = useCallback(async (email, password, fullName) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     });
+
+    if (data.user?.identities?.length === 0) {
+      throw new Error("User already registered");
+    }
+
     if (error) throw error;
   }, []);
 

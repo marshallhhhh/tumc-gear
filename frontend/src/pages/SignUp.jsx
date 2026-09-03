@@ -141,8 +141,20 @@ export default function SignUp() {
               autoComplete="new-password"
             />
             {error && (
-              <Alert severity="error" sx={{ mt: 1 }}>
+              <Alert severity="error">
                 {error}
+                {error === "User already registered" && (
+                  <>
+                    <br />
+                    <Link
+                      component={RouterLink}
+                      to="/forgot-password"
+                      state={{ email }}
+                    >
+                      Forgot your password?
+                    </Link>
+                  </>
+                )}
               </Alert>
             )}
             <Button

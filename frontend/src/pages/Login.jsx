@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useNotification } from "../context/NotificationContext";
 import {
   Container,
   Box,
@@ -15,8 +14,7 @@ import {
 } from "@mui/material";
 
 export default function Login() {
-  const { signIn, resetPassword } = useAuth();
-  const { notify } = useNotification();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,23 +44,6 @@ export default function Login() {
       setError(err.message || "Invalid email or password");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setError("Please enter your email address first");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
-    try {
-      await resetPassword(email);
-      notify("Check your email for a reset link", "success");
-    } catch (err) {
-      setError(err.message);
     }
   };
 
@@ -118,10 +99,11 @@ export default function Login() {
               <Link
                 width="100%"
                 underline="none"
-                component="button"
+                component={RouterLink}
                 type="button"
                 variant="body2"
-                onClick={handleForgotPassword}
+                to="/forgot-password"
+                state={{ email }}
                 sx={{ display: "flex", justifyContent: "flex-end" }}
               >
                 Forgot password?
