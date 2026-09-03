@@ -22,3 +22,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS one_active_loan_per_item
 CREATE UNIQUE INDEX IF NOT EXISTS one_open_report_per_item_per_reporter
   ON "FoundReport" ("itemId", "reportedBy")
   WHERE "reportedBy" IS NOT NULL AND status = 'OPEN';
+
+-- 4. ONE ACTIVE USER PER EMAIL
+--    Replaces the former @unique on User.email, which the soft-delete extension
+--    could not scope: a deleted user held their address forever, so a returning
+--    member with a new Supabase UUID could never be provisioned.
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_user_per_email
+  ON "User" ("email")
+  WHERE "deletedAt" IS NULL;

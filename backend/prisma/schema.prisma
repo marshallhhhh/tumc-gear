@@ -34,7 +34,10 @@ enum FoundReportStatus {
 
 model User {
   id        String   @id  // supabase auth UUID
-  email     String   @unique
+  // Uniqueness is enforced by the partial unique index `one_active_user_per_email`
+  // in prisma/manual_indexes.sql (unique only where deletedAt IS NULL), so that a
+  // soft-deleted user releases their email address. Not expressible in Prisma.
+  email     String
   fullName  String
   role      Role     @default(MEMBER)
   isActive  Boolean  @default(true)
