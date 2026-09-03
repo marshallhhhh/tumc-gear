@@ -7,7 +7,7 @@ const PRISMA_ERROR_MAP = {
     statusCode: 409,
     errorCode: "CONFLICT",
     message: "A record with these values already exists.",
-    details: (err) => ({ fields: err.meta?.target }),
+    details: () => ({}),
   },
   P2034: {
     statusCode: 409,
