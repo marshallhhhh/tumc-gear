@@ -95,7 +95,7 @@ Plus `cd frontend && npm run build` for frontend changes, and `cd backend && npx
 
 ## Infrastructure / deployment
 
-- `.github/workflows/deploy.yml`: on push to `main` touching `backend/**`, runs `prisma migrate deploy` against production, then SSHes to the VPS, `git pull`s `/opt/apps/tumc-gear` and recreates the `backend` container from the compose project in `/opt/apps/supabase` (self-hosted Supabase lives alongside the app). `prisma-migrate.yml` is a manual (`workflow_dispatch`) migration job.
+- `.github/workflows/deploy.yml`: on pushes to `main` touching `backend/**`, SSHes to the VPS, pulls `/opt/apps/tumc-gear`, builds the backend image, runs `npm run db:migrate` in a one-off backend container, and recreates the backend service from the compose project in `/opt/apps/supabase`. `prisma-migrate.yml` is a manual (`workflow_dispatch`) migration job.
 - `backend/Dockerfile`: `node:22-slim`, installs `openssl` (Prisma requirement), runs `npx prisma generate`, exposes 3000, `npm start`. Root `docker-compose.yml` builds `./backend` with `env_file: ./backend/.env`.
 - The frontend is a static Vite build; it is not part of the backend deploy workflow.
 - `backend/src/jobs/overdueReminders.js` is a one-shot script (calls `main()` on import) intended to be scheduled externally; it emails users with loans overdue when no reminder was sent in the last 2 days and stamps `User.lastOverdueEmailSentAt`.
