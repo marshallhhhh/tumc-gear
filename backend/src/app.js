@@ -10,6 +10,9 @@ import { globalRateLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 
+// application set behind nginx reverse proxy
+app.set("trust proxy", 1);
+
 app.use(pinoHttp({ logger }));
 app.use(helmet());
 app.use(
