@@ -27,3 +27,12 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DATABASE_URL }}
+
+      # Partial unique indexes cannot be expressed in the Prisma schema, so they
+      # live in manual_indexes.sql and must be applied after every migration.
+      # All statements are IF NOT EXISTS guarded and therefore idempotent.
+      - name: Apply manual indexes
+        run: npx prisma db execute --schema prisma/schema.prisma --file prisma/manual_indexes.sql
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}

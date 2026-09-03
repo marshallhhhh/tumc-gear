@@ -113,6 +113,7 @@ prisma/                # schema.prisma, migrations/, manual_indexes.sql
   - `500 INTERNAL_ERROR`
 
   Reuse these codes; do not invent new ones without a reason.
+
 - Translate known Prisma errors rather than letting them bubble: `Prisma.PrismaClientKnownRequestError` with `err.code === "P2002"` (unique violation) or `"P2034"` (write conflict / deadlock) is mapped to a `409 CONFLICT`. Re-throw `AppError` unchanged first (`if (err instanceof AppError) throw err;`).
 
 ## Database access
