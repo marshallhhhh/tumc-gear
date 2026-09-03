@@ -46,15 +46,21 @@ export async function createLoan(userId, data) {
     );
   } catch (err) {
     if (err instanceof AppError) throw err;
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      (err.code === "P2002" || err.code === "P2034")
-    ) {
-      throw new AppError(
-        409,
-        "CONFLICT",
-        "This item already has an active loan.",
-      );
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      // P2002 is only an availability conflict when it comes from the partial
+      // unique index backing this rule; any other constraint must not be
+      // reported as "already loaned".
+      const target = String(err.meta?.target ?? "");
+      if (
+        err.code === "P2034" ||
+        (err.code === "P2002" && target.includes("one_active_loan_per_item"))
+      ) {
+        throw new AppError(
+          409,
+          "CONFLICT",
+          "This item already has an active loan.",
+        );
+      }
     }
     throw err;
   }
@@ -353,6 +359,15 @@ export async function extendLoan(loanId, userId, data, isAdmin = false) {
   }
 }
 
+/**
+ * Cutoff before which a previously-sent overdue reminder is considered stale.
+ * Exported so the reminder job claims users against exactly the same boundary
+ * this query selects them by.
+ */
+export function overdueEmailCutoff(days) {
+  return new Date(Date.now() - Number(days) * 24 * 3600 * 1000);
+}
+
 export async function listUsersWithOverdueLoans(query = {}) {
   const {
     page,
@@ -388,7 +403,7 @@ export async function listUsersWithOverdueLoans(query = {}) {
   if (typeof lastOverdueEmailSentOlderThanDays !== "undefined") {
     const daysNum = Number(lastOverdueEmailSentOlderThanDays);
     if (!Number.isNaN(daysNum) && isFinite(daysNum) && daysNum >= 0) {
-      const cutoff = new Date(Date.now() - daysNum * 24 * 3600 * 1000);
+      const cutoff = overdueEmailCutoff(daysNum);
 
       // Combine the overdue-loan requirement with an OR for email timestamp:
       // include users whose lastOverdueEmailSentAt is null (never sent) OR older than cutoff.

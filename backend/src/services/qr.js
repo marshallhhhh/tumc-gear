@@ -1,5 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import { serializable } from "../utils/transaction.js";
 import { toPublicItem } from "./items.js";
 import {
   buildPaginationQuery,
@@ -24,16 +26,23 @@ export async function resolveQr(nanoid, { isAuthenticated = false } = {}) {
 }
 
 export async function createQrTag(nanoid) {
-  const existing = await prisma.qrTag.findUnique({ where: { nanoid } });
-  if (existing) {
-    throw new AppError(
-      409,
-      "CONFLICT",
-      "A QR tag with this nanoid already exists.",
-    );
+  // No pre-check: the `nanoid` unique constraint is the only real arbiter, and
+  // a read-then-write pair here would just be a race with a friendlier message.
+  try {
+    return await prisma.qrTag.create({ data: { nanoid } });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "A QR tag with this nanoid already exists.",
+      );
+    }
+    throw err;
   }
-
-  return prisma.qrTag.create({ data: { nanoid } });
 }
 
 export async function listQrTags(query) {
@@ -79,12 +88,14 @@ export async function assignQrTag(
   itemId,
   { force = false, currentItemId = null } = {},
 ) {
-  const item = await prisma.item.findUnique({ where: { id: itemId } });
-  if (!item) {
-    throw new AppError(404, "NOT_FOUND", "Item not found.");
-  }
+  // Serializable: the item lookup, the existing-tag check and the optimistic
+  // concurrency check all inform the final write and must share a snapshot.
+  return serializable(async (tx) => {
+    const item = await tx.item.findUnique({ where: { id: itemId } });
+    if (!item) {
+      throw new AppError(404, "NOT_FOUND", "Item not found.");
+    }
 
-  return prisma.$transaction(async (tx) => {
     const existingTag = await tx.qrTag.findUnique({ where: { itemId } });
     if (existingTag) {
       throw new AppError(
@@ -142,21 +153,23 @@ export async function assignQrTag(
 }
 
 export async function unassignQrTag(qrTagId) {
-  const qrTag = await prisma.qrTag.findUnique({ where: { id: qrTagId } });
-  if (!qrTag) {
-    throw new AppError(404, "NOT_FOUND", "QR tag not found.");
-  }
+  return serializable(async (tx) => {
+    const qrTag = await tx.qrTag.findUnique({ where: { id: qrTagId } });
+    if (!qrTag) {
+      throw new AppError(404, "NOT_FOUND", "QR tag not found.");
+    }
 
-  if (!qrTag.itemId) {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "QR tag is not assigned to any item.",
-    );
-  }
+    if (!qrTag.itemId) {
+      throw new AppError(
+        422,
+        "UNPROCESSABLE_ENTITY",
+        "QR tag is not assigned to any item.",
+      );
+    }
 
-  return prisma.qrTag.update({
-    where: { id: qrTagId },
-    data: { itemId: null },
+    return tx.qrTag.update({
+      where: { id: qrTagId },
+      data: { itemId: null },
+    });
   });
 }
