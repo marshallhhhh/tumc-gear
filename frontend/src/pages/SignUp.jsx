@@ -146,7 +146,11 @@ export default function SignUp() {
                 {error === "User already registered" && (
                   <>
                     <br />
-                    <Link component={RouterLink} to="/forgot-password" state={{ email }}>
+                    <Link
+                      component={RouterLink}
+                      to="/forgot-password"
+                      state={{ email }}
+                    >
                       Forgot your password?
                     </Link>
                   </>

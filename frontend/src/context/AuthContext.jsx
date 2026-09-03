@@ -103,7 +103,6 @@ export function AuthProvider({ children }) {
 
     if (data.user?.identities?.length === 0) {
       throw new Error("User already registered");
-      return;
     }
 
     if (error) throw error;

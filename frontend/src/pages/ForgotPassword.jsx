@@ -1,32 +1,25 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useNotification } from "../context/NotificationContext";
 import {
   Container,
   Box,
   TextField,
   Button,
   Typography,
-  Link,
   Paper,
   CircularProgress,
   Alert,
 } from "@mui/material";
 
-export default function Login() {
-  const { signIn, resetPassword } = useAuth();
-  const navigate = useNavigate();
+export default function ForgotPassword() {
+  const { resetPassword } = useAuth();
   const location = useLocation();
 
   const [email, setEmail] = useState(location.state?.email || "");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
-
-  const returnUrl = location.state?.from || "/home";
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
@@ -93,16 +86,8 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
             />
-            {error && (
-              <Alert severity="error">
-                {error}
-              </Alert>
-            )}
-            {message && (
-              <Alert severity="success">
-                {message}
-              </Alert>
-            )}
+            {error && <Alert severity="error">{error}</Alert>}
+            {message && <Alert severity="success">{message}</Alert>}
             <Button
               type="submit"
               fullWidth

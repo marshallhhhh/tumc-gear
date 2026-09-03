@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useNotification } from "../context/NotificationContext";
 import {
   Container,
   Box,
@@ -15,8 +14,7 @@ import {
 } from "@mui/material";
 
 export default function Login() {
-  const { signIn, resetPassword } = useAuth();
-  const { notify } = useNotification();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
