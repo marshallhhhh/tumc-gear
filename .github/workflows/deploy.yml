@@ -25,7 +25,10 @@ jobs:
           script: |
             set -e
             cd /opt/apps/tumc-gear
-            git pull origin main
+            # Authenticate explicitly with the workflow-scoped GITHUB_TOKEN so the
+            # pull doesn't depend on any git credentials being configured on the
+            # VPS itself (which caused "could not read Username" failures).
+            git pull "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/marshallhhhh/tumc-gear.git" main
 
             cd /opt/apps/supabase
 
