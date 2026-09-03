@@ -1,12 +1,13 @@
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import { serializable } from "../utils/transaction.js";
 import {
   buildPaginationQuery,
   buildPaginationMeta,
 } from "../utils/pagination.js";
 
-async function generateShortId(categoryId) {
-  const category = await prisma.category.findUnique({
+async function generateShortId(tx, categoryId) {
+  const category = await tx.category.findUnique({
     where: { id: categoryId },
   });
   if (!category) {
@@ -14,7 +15,7 @@ async function generateShortId(categoryId) {
   }
 
   // Find the highest existing number for this prefix across all items (including deleted)
-  const items = await prisma.item.findMany({
+  const items = await tx.item.findMany({
     where: { shortId: { startsWith: `${category.prefix}-` } },
     select: { shortId: true },
     includeDeleted: true,
@@ -32,17 +33,21 @@ async function generateShortId(categoryId) {
 }
 
 export async function createItem(data) {
-  const shortId = await generateShortId(data.categoryId);
+  // The shortId scan and the insert must share a snapshot, otherwise two
+  // concurrent creates in the same category derive the same sequence number.
+  return serializable(async (tx) => {
+    const shortId = await generateShortId(tx, data.categoryId);
 
-  return prisma.item.create({
-    data: {
-      name: data.name,
-      description: data.description || null,
-      categoryId: data.categoryId,
-      serialNumber: data.serialNumber || null,
-      shortId,
-    },
-    include: { category: true, qrTag: true },
+    return tx.item.create({
+      data: {
+        name: data.name,
+        description: data.description || null,
+        categoryId: data.categoryId,
+        serialNumber: data.serialNumber || null,
+        shortId,
+      },
+      include: { category: true, qrTag: true },
+    });
   });
 }
 
@@ -133,51 +138,60 @@ export async function getItem(
 }
 
 export async function updateItem(id, data) {
-  const item = await prisma.item.findUnique({ where: { id } });
-  if (!item) {
-    throw new AppError(404, "NOT_FOUND", "Item not found.");
-  }
-
-  const updateData = {};
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.serialNumber !== undefined)
-    updateData.serialNumber = data.serialNumber;
-  if (data.categoryId !== undefined) {
-    const category = await prisma.category.findUnique({
-      where: { id: data.categoryId },
-    });
-    if (!category) {
-      throw new AppError(404, "NOT_FOUND", "Category not found.");
+  // Serializable so the item cannot be reparented onto a category that is
+  // soft-deleted between the existence check and the write.
+  return serializable(async (tx) => {
+    const item = await tx.item.findUnique({ where: { id } });
+    if (!item) {
+      throw new AppError(404, "NOT_FOUND", "Item not found.");
     }
-    updateData.categoryId = data.categoryId;
-  }
 
-  return prisma.item.update({
-    where: { id },
-    data: updateData,
-    include: { category: true, qrTag: true },
+    const updateData = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined)
+      updateData.description = data.description;
+    if (data.serialNumber !== undefined)
+      updateData.serialNumber = data.serialNumber;
+    if (data.categoryId !== undefined) {
+      const category = await tx.category.findUnique({
+        where: { id: data.categoryId },
+      });
+      if (!category) {
+        throw new AppError(404, "NOT_FOUND", "Category not found.");
+      }
+      updateData.categoryId = data.categoryId;
+    }
+
+    return tx.item.update({
+      where: { id },
+      data: updateData,
+      include: { category: true, qrTag: true },
+    });
   });
 }
 
 export async function deleteItem(id) {
-  const item = await prisma.item.findUnique({ where: { id } });
-  if (!item) {
-    throw new AppError(404, "NOT_FOUND", "Item not found.");
-  }
+  // Serializable so an item cannot be soft-deleted concurrently with being
+  // loaned out, which would orphan the new ACTIVE loan.
+  await serializable(async (tx) => {
+    const item = await tx.item.findUnique({ where: { id } });
+    if (!item) {
+      throw new AppError(404, "NOT_FOUND", "Item not found.");
+    }
 
-  const activeLoan = await prisma.loan.findFirst({
-    where: { itemId: id, status: "ACTIVE" },
+    const activeLoan = await tx.loan.findFirst({
+      where: { itemId: id, status: "ACTIVE" },
+    });
+    if (activeLoan) {
+      throw new AppError(
+        422,
+        "UNPROCESSABLE_ENTITY",
+        "Cannot delete an item with an active loan.",
+      );
+    }
+
+    await tx.item.update({ where: { id }, data: { deletedAt: new Date() } });
   });
-  if (activeLoan) {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "Cannot delete an item with an active loan.",
-    );
-  }
-
-  await prisma.item.update({ where: { id }, data: { deletedAt: new Date() } });
 }
 
 export async function listItems(query) {

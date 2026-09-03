@@ -1,44 +1,47 @@
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import { serializable } from "../utils/transaction.js";
 import {
   buildPaginationQuery,
   buildPaginationMeta,
 } from "../utils/pagination.js";
 
 export async function createFoundReport(data, userId) {
-  const item = await prisma.item.findUnique({ where: { id: data.itemId } });
-  if (!item) {
-    throw new AppError(404, "NOT_FOUND", "Item not found.");
-  }
+  // Serializable so the duplicate-open-report check cannot be overtaken by a
+  // concurrent submission; the partial unique indexes are the final backstop.
+  return serializable(async (tx) => {
+    const item = await tx.item.findUnique({ where: { id: data.itemId } });
+    if (!item) {
+      throw new AppError(404, "NOT_FOUND", "Item not found.");
+    }
 
-  // Check for duplicate open report (same item + same reporter)
-  const duplicateWhere = {
-    itemId: data.itemId,
-    status: "OPEN",
-    reportedBy: userId || null,
-  };
+    // Check for duplicate open report (same item + same reporter)
+    const existing = await tx.foundReport.findFirst({
+      where: {
+        itemId: data.itemId,
+        status: "OPEN",
+        reportedBy: userId || null,
+      },
+    });
+    if (existing) {
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "An open found report already exists for this item.",
+      );
+    }
 
-  const existing = await prisma.foundReport.findFirst({
-    where: duplicateWhere,
-  });
-  if (existing) {
-    throw new AppError(
-      409,
-      "CONFLICT",
-      "An open found report already exists for this item.",
-    );
-  }
-
-  return prisma.foundReport.create({
-    data: {
-      itemId: data.itemId,
-      reportedBy: userId || null,
-      contactInfo: data.contactInfo || null,
-      description: data.description || null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
-    },
-    include: { item: true },
+    return tx.foundReport.create({
+      data: {
+        itemId: data.itemId,
+        reportedBy: userId || null,
+        contactInfo: data.contactInfo || null,
+        description: data.description || null,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+      },
+      include: { item: true },
+    });
   });
 }
 
@@ -96,26 +99,30 @@ export async function getFoundReport(id) {
 }
 
 export async function closeFoundReport(id, adminId) {
-  const report = await prisma.foundReport.findUnique({ where: { id } });
-  if (!report) {
-    throw new AppError(404, "NOT_FOUND", "Found report not found.");
-  }
+  // Serializable so two admins closing the same report cannot both pass the
+  // status check, with the second silently overwriting closedBy/closedAt.
+  return serializable(async (tx) => {
+    const report = await tx.foundReport.findUnique({ where: { id } });
+    if (!report) {
+      throw new AppError(404, "NOT_FOUND", "Found report not found.");
+    }
 
-  if (report.status === "CLOSED") {
-    throw new AppError(
-      422,
-      "UNPROCESSABLE_ENTITY",
-      "This found report is already closed.",
-    );
-  }
+    if (report.status === "CLOSED") {
+      throw new AppError(
+        422,
+        "UNPROCESSABLE_ENTITY",
+        "This found report is already closed.",
+      );
+    }
 
-  return prisma.foundReport.update({
-    where: { id },
-    data: {
-      status: "CLOSED",
-      closedAt: new Date(),
-      closedBy: adminId,
-    },
-    include: { item: true },
+    return tx.foundReport.update({
+      where: { id },
+      data: {
+        status: "CLOSED",
+        closedAt: new Date(),
+        closedBy: adminId,
+      },
+      include: { item: true },
+    });
   });
 }
