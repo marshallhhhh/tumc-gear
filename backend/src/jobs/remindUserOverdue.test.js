@@ -44,7 +44,7 @@ const loan = (name, dueDate) => ({ item: { name }, dueDate });
 async function runJob() {
   vi.resetModules();
   process.exitCode = undefined;
-  await import("./overdueReminders.js");
+  await import("./remindUserOverdue.js");
   for (let i = 0; i < 10; i++) {
     await new Promise((resolve) => setTimeout(resolve, 0));
   }

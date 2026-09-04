@@ -31,23 +31,22 @@ function buildEmail({ users }) {
 
 async function main() {
   const users = [];
-  let batch = 0;
+  let totalPages = 0;
 
-  for (; batch < MAX_BATCHES; batch++) {
-    const { data, totalPages } = await listUsersWithOverdueLoans({
-      page: batch + 1,
-      pageSize: BATCH_SIZE,
-    });
+  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+    const { data, totalPages: responseTotalPages } =
+      await listUsersWithOverdueLoans({
+        page: batch + 1,
+        pageSize: BATCH_SIZE,
+      });
 
     users.push(...data);
+    totalPages = responseTotalPages;
 
-    if (batch + 1 >= totalPages) {
-      batch++;
-      break;
-    }
+    if (batch + 1 >= responseTotalPages) break;
   }
 
-  if (batch === MAX_BATCHES) {
+  if (totalPages > MAX_BATCHES) {
     logger.warn(
       { maxBatches: MAX_BATCHES },
       "Admin overdue notification job hit the batch limit; some users may be missing from the email",

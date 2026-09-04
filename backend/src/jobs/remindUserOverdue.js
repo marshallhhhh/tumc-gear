@@ -68,6 +68,7 @@ async function main() {
       lastOverdueEmailSentOlderThanDays: REMINDER_INTERVAL_DAYS,
       page: 1,
       pageSize: BATCH_SIZE,
+      ...(attempted.size > 0 && { excludeUserIds: [...attempted] }),
     });
 
     const pending = data.filter((entry) => !attempted.has(entry.user.id));
