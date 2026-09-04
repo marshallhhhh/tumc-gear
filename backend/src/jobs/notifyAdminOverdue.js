@@ -20,7 +20,9 @@ function buildEmail({ users }) {
         user,
         overdueLoans: overdueLoans.map((loan) => ({
           item: loan.item,
-          overdueBy: Math.ceil((Date.now() - loan.dueDate.getTime()) / (1000 * 60 * 60 * 24)),
+          overdueBy: Math.ceil(
+            (Date.now() - loan.dueDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
         })),
       })),
     },
