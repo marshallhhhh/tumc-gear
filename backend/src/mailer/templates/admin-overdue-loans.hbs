@@ -1,0 +1,24 @@
+<h1>Overdue Loans</h1>
+
+{{#if (isMultiple users)}}
+  <p>There are {{users.length}} users with overdue loans</p>
+{{else}}
+  <p>One user has overdue loans</p>
+{{/if}}
+
+<ul>
+  {{#each users}}
+    <li>
+      <strong>{{this.user.fullName}}</strong>
+      <a href="mailto:{{this.user.email}}">(Email)</a>
+      <ul>
+        {{#each this.overdueLoans}}
+          <li>
+            <strong>{{this.item.name}} ({{this.item.shortId}})</strong>
+            <span> — {{this.overdueBy}} days overdue</span>
+          </li>
+        {{/each}}
+    </li>
+    <br/>
+  {{/each}}
+</ul>
