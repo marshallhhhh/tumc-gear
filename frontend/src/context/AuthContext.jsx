@@ -95,17 +95,50 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signUp = useCallback(async (email, password, fullName) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName } },
-    });
+    // supabase-js's signUp() can't distinguish a new signup from an
+    // already-registered-but-unconfirmed email here: with "Confirm email"
+    // on, GoTrue's response has no session and no `.user` wrapper, so the
+    // SDK's parser always resolves data.user to null. Call the REST endpoint
+    // directly so we can read the `identities` array Supabase actually sends.
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/signup`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          data: { full_name: fullName },
+          gotrue_meta_security: {},
+        }),
+      },
+    );
 
-    if (data.user?.identities?.length === 0) {
+    const body = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        body.msg || body.error_description || body.message || "Sign up failed.",
+      );
+    }
+
+    if (body.identities?.length === 0) {
       throw new Error("User already registered");
     }
 
-    if (error) throw error;
+    // If a session came back (e.g. autoconfirm is enabled), hand it to the
+    // SDK so it persists/refreshes it like a normal signUp() would.
+    if (body.access_token && body.refresh_token) {
+      const { error } = await supabase.auth.setSession({
+        access_token: body.access_token,
+        refresh_token: body.refresh_token,
+      });
+      if (error) throw error;
+    }
   }, []);
 
   const signOut = useCallback(async () => {
