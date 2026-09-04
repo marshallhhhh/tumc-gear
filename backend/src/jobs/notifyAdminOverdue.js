@@ -79,7 +79,7 @@ main()
     if (failed > 0) process.exitCode = 1;
   })
   .catch((err) => {
-    logger.error({ err }, "Admin overdue reminder job failed");
+    logger.error({ err }, "Admin overdue notification job failed");
     process.exitCode = 1;
   })
   .finally(() => prisma.$disconnect().catch(() => {}));
