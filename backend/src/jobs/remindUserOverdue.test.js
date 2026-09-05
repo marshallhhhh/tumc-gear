@@ -57,7 +57,7 @@ beforeEach(() => {
   listUsersWithOverdueLoans.mockResolvedValue({ data: [] });
 });
 
-describe("overdueReminders job", () => {
+describe("remindUserOverdue job", () => {
   it("exits cleanly when there is nothing to send", async () => {
     await runJob();
 
