@@ -67,6 +67,8 @@ export default function DataTable({
         getRowId={getRowId}
         loading={loading}
         autoHeight={!fillHeight}
+        autosizeOnMount
+        autosizeOptions={{ includeOutliers: true, includeHeaders: true, expand: true }}
         density="compact"
         disableColumnMenu
         disableRowSelectionOnClick

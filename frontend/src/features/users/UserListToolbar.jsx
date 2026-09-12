@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Box,
   Button,
+  Chip,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -52,10 +53,32 @@ export default function UserListToolbar({
         value={role}
         onChange={(e) => onRoleChange(e.target.value)}
         label="Role"
+        renderValue={(value) =>
+          value ? (
+            <Chip
+              label={value.charAt(0) + value.slice(1).toLowerCase()}
+              size="small"
+              color={value === "ADMIN" ? "primary" : "warning"}
+              variant="outlined"
+            />
+          ) : (
+            <span style={{ color: "text.secondary" }}>All Roles</span>
+          )
+        }
       >
         <MenuItem value="">All</MenuItem>
-        <MenuItem value="ADMIN">Admin</MenuItem>
-        <MenuItem value="MEMBER">Member</MenuItem>
+        <MenuItem value="ADMIN"><Chip
+              label="Admin"
+              size="small"
+              color="primary"
+              variant="outlined"
+            /></MenuItem>
+        <MenuItem value="MEMBER"><Chip
+              label="Member"
+              size="small"
+              color="warning"
+              variant="outlined"
+            /></MenuItem>
       </Select>
     </FormControl>
   );
