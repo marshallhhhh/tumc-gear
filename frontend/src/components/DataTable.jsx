@@ -23,6 +23,8 @@ export default function DataTable({
   sortBy,
   sortOrder = "asc",
   showToolbar = false,
+  toolbar,
+  toolbarProps,
   getRowId,
 }) {
   const columnSx = {};
@@ -68,7 +70,11 @@ export default function DataTable({
         density="compact"
         disableColumnMenu
         disableRowSelectionOnClick
-        showToolbar={showToolbar}
+        showToolbar={showToolbar || Boolean(toolbar)}
+        slots={toolbar ? { toolbar } : undefined}
+        slotProps={
+          toolbar && toolbarProps ? { toolbar: toolbarProps } : undefined
+        }
         initialState={{
           sorting: sortBy
             ? { sortModel: [{ field: sortBy, sort: sortOrder }] }
