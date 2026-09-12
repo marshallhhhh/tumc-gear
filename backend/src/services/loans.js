@@ -375,6 +375,7 @@ export async function listUsersWithOverdueLoans(query = {}) {
     sortBy,
     sortOrder,
     lastOverdueEmailSentOlderThanDays,
+    excludeUserIds,
   } = query;
 
   const {
@@ -419,6 +420,10 @@ export async function listUsersWithOverdueLoans(query = {}) {
         ],
       };
     }
+  }
+
+  if (excludeUserIds?.length) {
+    userWhere = { AND: [userWhere, { id: { notIn: excludeUserIds } }] };
   }
 
   const [users, totalCount] = await Promise.all([
