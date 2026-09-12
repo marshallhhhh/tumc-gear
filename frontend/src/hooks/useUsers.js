@@ -32,7 +32,7 @@ export function useUsers(params) {
   return useQuery({
     queryKey: ["users", "list", params],
     queryFn: () => usersApi.getUsers(params),
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
   });
 }
 

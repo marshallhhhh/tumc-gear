@@ -5,7 +5,7 @@ export function useLoans(params) {
   return useQuery({
     queryKey: ["loans", params],
     queryFn: () => loansApi.getLoans(params),
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
   });
 }
 

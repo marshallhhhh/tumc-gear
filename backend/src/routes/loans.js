@@ -26,7 +26,7 @@ const extendSchema = z.object({
 const listQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).optional(),
-    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    pageSize: z.coerce.number().int().min(1).max(500).optional(),
     sortBy: z
       .enum(["dueDate", "status", "createdAt", "checkoutDate"])
       .optional(),
@@ -263,7 +263,7 @@ router.get(
 const myLoansQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).optional(),
-    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    pageSize: z.coerce.number().int().min(1).max(500).optional(),
     sortBy: z
       .enum(["dueDate", "status", "createdAt", "checkoutDate"])
       .optional(),

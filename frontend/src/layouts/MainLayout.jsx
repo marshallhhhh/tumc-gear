@@ -8,8 +8,8 @@ export default function MainLayout() {
     <Box
       display="flex"
       flexDirection="column"
-      minHeight="100dvh"
-      sx={{ width: "100%", overflowX: "hidden", overscrollBehavior: "none" }}
+      height="100dvh"
+      sx={{ width: "100%", overflow: "hidden", overscrollBehavior: "none" }}
     >
       <Navbar />
       <Box
@@ -17,7 +17,13 @@ export default function MainLayout() {
         flexGrow={1}
         display="flex"
         flexDirection="column"
-        sx={{ pb: 2, overflowX: "hidden", overscrollBehavior: "none" }}
+        sx={{
+          px: 2,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          overscrollBehavior: "none",
+        }}
       >
         <Outlet />
       </Box>

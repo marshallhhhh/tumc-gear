@@ -5,7 +5,7 @@ export function useFoundReports(params) {
   return useQuery({
     queryKey: ["foundReports", params],
     queryFn: () => foundReportsApi.getFoundReports(params),
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
   });
 }
 

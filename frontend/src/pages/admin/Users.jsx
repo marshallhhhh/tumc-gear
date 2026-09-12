@@ -1,5 +1,4 @@
-import { useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import { useUsers, useUser } from "../../hooks/useUsers";
 import { Container, Typography, Chip } from "@mui/material";
 import DataTable from "../../components/DataTable";
@@ -9,36 +8,24 @@ import UserDetailModal from "../../features/users/UserDetailModal";
 import { formatDate } from "../../utils/date";
 
 export default function Users() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedUserId, setSelectedUserId] = useState(null);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
-  const sortBy = searchParams.get("sortBy") || "createdAt";
-  const sortOrder = searchParams.get("sortOrder") || "desc";
-
-  const { data, isLoading } = useUsers({ page, pageSize, sortBy, sortOrder });
+  // Single request for the whole list; the grid slices it client-side.
+  const { data, isLoading } = useUsers({ pageSize: 500 });
   const { data: selectedUser } = useUser(selectedUserId);
 
-  const updateParam = useCallback(
-    (key, value) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        if (key !== "page") next.set("page", "1");
-        return next;
-      });
-    },
-    [setSearchParams],
-  );
-
   const columns = [
-    { id: "fullName", label: "Name", render: (row) => row.fullName || "—" },
+    {
+      id: "fullName",
+      label: "Name",
+      value: (row) => row.fullName ?? "",
+      render: (row) => row.fullName || "—",
+    },
     { id: "email", label: "Email" },
     {
       id: "role",
       label: "Role",
+      value: (row) => row.role,
       render: (row) => (
         <Chip
           label={row.role.charAt(0) + row.role.slice(1).toLowerCase()}
@@ -51,6 +38,7 @@ export default function Users() {
     {
       id: "isActive",
       label: "Status",
+      value: (row) => (row.isActive ? "Active" : "Inactive"),
       render: (row) => (
         <Chip
           label={row.isActive ? "Active" : "Inactive"}
@@ -63,6 +51,8 @@ export default function Users() {
     {
       id: "createdAt",
       label: "Joined",
+      type: "date",
+      value: (row) => (row.createdAt ? new Date(row.createdAt) : null),
       render: (row) => formatDate(row.createdAt),
     },
   ];
@@ -81,20 +71,9 @@ export default function Users() {
         <DataTable
           columns={columns}
           rows={data.data}
-          totalCount={data.totalCount}
-          page={page - 1}
-          pageSize={pageSize}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onPageChange={(p) => updateParam("page", String(p + 1))}
-          onPageSizeChange={(ps) => {
-            updateParam("pageSize", String(ps));
-            updateParam("page", "1");
-          }}
-          onSortChange={(col, order) => {
-            updateParam("sortBy", col);
-            updateParam("sortOrder", order);
-          }}
+          sortBy="createdAt"
+          sortOrder="desc"
+          showToolbar
           onRowClick={(row) => setSelectedUserId(row.id)}
         />
       )}

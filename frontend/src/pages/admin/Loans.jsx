@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLoans, useCancelLoan } from "../../hooks/useLoans";
 import { useNotification } from "../../context/NotificationContext";
 import { Container, Typography } from "@mui/material";
@@ -17,7 +17,6 @@ const isOverdue = (loan) =>
 
 export default function Loans() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { notify } = useNotification();
 
   const cancelLoan = useCancelLoan();
@@ -25,36 +24,8 @@ export default function Loans() {
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [cancelConfirm, setCancelConfirm] = useState(false);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
-  const sortBy = searchParams.get("sortBy") || "createdAt";
-  const sortOrder = searchParams.get("sortOrder") || "desc";
-  const status = searchParams.get("status") || "";
-  const overdue = searchParams.get("overdue") || "";
-
-  const queryParams = {
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-    ...(status && { status }),
-    ...(overdue && { overdue }),
-  };
-
-  const { data, isLoading } = useLoans(queryParams);
-
-  const updateParam = useCallback(
-    (key, value) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        if (key !== "page") next.set("page", "1");
-        return next;
-      });
-    },
-    [setSearchParams],
-  );
+  // Single request for the whole list; the grid slices it client-side.
+  const { data, isLoading } = useLoans({ pageSize: 500 });
 
   const handleCancel = async () => {
     setCancelConfirm(false);
@@ -74,7 +45,7 @@ export default function Loans() {
     {
       id: "item",
       label: "Item",
-      sortable: false,
+      value: (row) => row.item?.name ?? "",
       render: (row) => (
         <Typography
           variant="body2"
@@ -95,18 +66,27 @@ export default function Loans() {
     {
       id: "user",
       label: "Borrower",
-      sortable: false,
+      value: (row) => row.user?.fullName || row.user?.email || "",
       render: (row) => row.user?.fullName || row.user?.email || "—",
     },
     {
       id: "checkoutDate",
       label: "Checkout",
+      type: "date",
+      value: (row) => (row.checkoutDate ? new Date(row.checkoutDate) : null),
       render: (row) => formatDate(row.checkoutDate),
     },
-    { id: "dueDate", label: "Due", render: (row) => formatDate(row.dueDate) },
+    {
+      id: "dueDate",
+      label: "Due",
+      type: "date",
+      value: (row) => (row.dueDate ? new Date(row.dueDate) : null),
+      render: (row) => formatDate(row.dueDate),
+    },
     {
       id: "status",
       label: "Status",
+      value: (row) => (isOverdue(row) ? "OVERDUE" : row.status),
       render: (row) => (
         <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
       ),
@@ -127,20 +107,9 @@ export default function Loans() {
         <DataTable
           columns={columns}
           rows={data.data}
-          totalCount={data.totalCount}
-          page={page - 1}
-          pageSize={pageSize}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onPageChange={(p) => updateParam("page", String(p + 1))}
-          onPageSizeChange={(ps) => {
-            updateParam("pageSize", String(ps));
-            updateParam("page", "1");
-          }}
-          onSortChange={(col, order) => {
-            updateParam("sortBy", col);
-            updateParam("sortOrder", order);
-          }}
+          sortBy="checkoutDate"
+          sortOrder="desc"
+          showToolbar
           onRowClick={(row) => setSelectedLoan(row)}
         />
       )}

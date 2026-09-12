@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useItems } from "../../hooks/useItems";
 import { useCategories } from "../../hooks/useCategories";
 import {
@@ -13,11 +13,14 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  Popover,
+  Stack,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Search as SearchIcon,
   QrCode as QrIcon,
+  FilterList as FilterListIcon,
 } from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
 import StatusChip from "../../components/StatusChip";
@@ -27,69 +30,119 @@ import CreateItemDialog from "../../features/items/CreateItemDialog";
 
 export default function GearList() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories } = useCategories();
 
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [category, setCategory] = useState("");
+  const [hasLoan, setHasLoan] = useState("");
+  const [hasQrTag, setHasQrTag] = useState("");
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
-  const sortBy = searchParams.get("sortBy") || "name";
-  const sortOrder = searchParams.get("sortOrder") || "asc";
-  const category = searchParams.get("category") || "";
-  const hasLoan = searchParams.get("hasLoan") || "";
-  const hasQrTag = searchParams.get("hasQrTag") || "";
+  // Single request for the whole list; the grid slices it client-side.
+  const { data, isLoading } = useItems({ pageSize: 500 });
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
+  const allItems = useMemo(() => data?.data ?? [], [data]);
 
-  const queryParams = {
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-    ...(debouncedSearch && { search: debouncedSearch }),
-    ...(category && { category }),
-    ...(hasLoan && { hasLoan }),
-    ...(hasQrTag && { hasQrTag }),
-  };
+  const rows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return allItems.filter((item) => {
+      if (category && item.category?.id !== category) return false;
+      if (hasQrTag && Boolean(item.qrTag) !== (hasQrTag === "true"))
+        return false;
+      if (hasLoan && Boolean(item.hasActiveLoan) !== (hasLoan === "true"))
+        return false;
+      if (!term) return true;
+      return (
+        item.name?.toLowerCase().includes(term) ||
+        item.shortId?.toLowerCase().includes(term) ||
+        item.description?.toLowerCase().includes(term)
+      );
+    });
+  }, [allItems, search, category, hasQrTag, hasLoan]);
 
-  const { data, isLoading } = useItems(queryParams);
+  const activeFilterCount = [category, hasQrTag, hasLoan].filter(
+    Boolean,
+  ).length;
+  const filtersOpen = Boolean(filterAnchorEl);
 
-  const updateParam = useCallback(
-    (key, value) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        if (key !== "page") next.set("page", "1");
-        return next;
-      });
-    },
-    [setSearchParams],
+  const renderFilterFields = (stacked) => (
+    <>
+      <FormControl
+        size="small"
+        fullWidth={stacked}
+        sx={{ minWidth: stacked ? undefined : 150 }}
+      >
+        <InputLabel>Category</InputLabel>
+        <Select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          label="Category"
+        >
+          <MenuItem value="">All</MenuItem>
+          {categories?.map((c) => (
+            <MenuItem key={c.id} value={c.id}>
+              {c.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl
+        size="small"
+        fullWidth={stacked}
+        sx={{ minWidth: stacked ? undefined : 130 }}
+      >
+        <InputLabel>Has QR Tag</InputLabel>
+        <Select
+          value={hasQrTag}
+          onChange={(e) => setHasQrTag(e.target.value)}
+          label="Has QR Tag"
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="true">Yes</MenuItem>
+          <MenuItem value="false">No</MenuItem>
+        </Select>
+      </FormControl>
+      <FormControl
+        size="small"
+        fullWidth={stacked}
+        sx={{ minWidth: stacked ? undefined : 140 }}
+      >
+        <InputLabel>Active Loan</InputLabel>
+        <Select
+          value={hasLoan}
+          onChange={(e) => setHasLoan(e.target.value)}
+          label="Active Loan"
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="true">Checked Out</MenuItem>
+          <MenuItem value="false">Available</MenuItem>
+        </Select>
+      </FormControl>
+    </>
   );
 
   const columns = [
     { id: "name", label: "Name" },
     {
       id: "hasqr",
+      width: 48,
+      minWidth: 48,
+      sortable: false,
       sx: { px: 0 },
       render: (row) => row.qrTag && <QrIcon fontSize="small" />,
     },
     {
       id: "category",
       label: "Category",
+      value: (row) => row.category?.name ?? "",
       render: (row) => row.category?.name || "—",
     },
     { id: "shortId", label: "Short ID" },
     {
       id: "status",
       label: "Status",
-      sortable: false,
+      value: (row) => (row.hasActiveLoan ? "Checked out" : "Available"),
       render: (row) => (
         <StatusChip status={row.hasActiveLoan ? "CHECKED_OUT" : "AVAILABLE"} />
       ),
@@ -97,12 +150,24 @@ export default function GearList() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        height: "100%",
+        minHeight: 0,
+        overflow: "hidden",
+        mt: 2,
+      }}
+    >
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         mb={2}
+        flexShrink={0}
       >
         <Typography variant="h4">Gear</Typography>
         <Button
@@ -114,7 +179,14 @@ export default function GearList() {
         </Button>
       </Box>
 
-      <Box display="flex" gap={2} mb={2} flexWrap="wrap">
+      <Box
+        display="flex"
+        gap={2}
+        mb={2}
+        flexWrap="wrap"
+        flexShrink={0}
+        alignItems="center"
+      >
         <TextField
           placeholder="Search..."
           size="small"
@@ -131,76 +203,56 @@ export default function GearList() {
           }}
           sx={{ minWidth: 200 }}
         />
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={category}
-            onChange={(e) => updateParam("category", e.target.value)}
-            label="Category"
-          >
-            <MenuItem value="">All</MenuItem>
-            {categories?.map((c) => (
-              <MenuItem key={c.id} value={c.id}>
-                {c.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 130 }}>
-          <InputLabel>Has QR Tag</InputLabel>
-          <Select
-            value={hasQrTag}
-            onChange={(e) => updateParam("hasQrTag", e.target.value)}
-            label="Has QR Tag"
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="true">Yes</MenuItem>
-            <MenuItem value="false">No</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>Active Loan</InputLabel>
-          <Select
-            value={hasLoan}
-            onChange={(e) => updateParam("hasLoan", e.target.value)}
-            label="Active Loan"
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="true">Checked Out</MenuItem>
-            <MenuItem value="false">Available</MenuItem>
-          </Select>
-        </FormControl>
+        <Box
+          sx={{ display: { xs: "none", custom_800: "flex" }, gap: 2, flexWrap: "wrap" }}
+        >
+          {renderFilterFields(false)}
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<FilterListIcon />}
+          onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+          sx={{
+            display: { xs: "inline-flex", custom_800: "none" },
+            height: 40,
+          }}
+        >
+          Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+        </Button>
+        <Popover
+          open={filtersOpen}
+          anchorEl={filterAnchorEl}
+          onClose={() => setFilterAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        >
+          <Stack sx={{ p: 2, gap: 2, minWidth: 220 }}>
+            {renderFilterFields(true)}
+          </Stack>
+        </Popover>
       </Box>
 
-      {isLoading ? (
-        <TableSkeleton />
-      ) : !data?.data?.length ? (
-        <EmptyState
-          message={
-            debouncedSearch ? `No items match your filters` : "No items found"
-          }
-        />
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={data.data}
-          totalCount={data.totalCount}
-          page={page - 1}
-          pageSize={pageSize}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onPageChange={(p) => updateParam("page", String(p + 1))}
-          onPageSizeChange={(ps) => {
-            updateParam("pageSize", String(ps));
-            updateParam("page", "1");
-          }}
-          onSortChange={(col, order) => {
-            updateParam("sortBy", col);
-            updateParam("sortOrder", order);
-          }}
-          onRowClick={(row) => navigate(`/admin/items/${row.shortId}`)}
-        />
-      )}
+      <Box
+        sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+      >
+        {isLoading ? (
+          <TableSkeleton />
+        ) : !rows.length ? (
+          <EmptyState
+            message={
+              allItems.length ? "No items match your filters" : "No items found"
+            }
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            rows={rows}
+            sortBy="name"
+            sortOrder="asc"
+            fillHeight
+            onRowClick={(row) => navigate(`/admin/items/${row.shortId}`)}
+          />
+        )}
+      </Box>
 
       <CreateItemDialog
         open={createOpen}

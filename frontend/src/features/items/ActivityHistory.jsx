@@ -9,19 +9,20 @@ const columns = [
   {
     id: "type",
     label: "Event",
-    sortable: false,
+    value: (row) => row.type,
     render: (row) => <StatusChip status={row.type} />,
   },
   {
     id: "timestamp",
     label: "Date",
-    sortable: false,
+    type: "date",
+    value: (row) => (row.timestamp ? new Date(row.timestamp) : null),
     render: (row) => formatDate(row.timestamp),
   },
   {
     id: "user",
     label: "User",
-    sortable: false,
+    value: (row) => (row.user ? row.user.fullName || row.user.email : ""),
     render: (row) => (row.user ? row.user.fullName || row.user.email : "—"),
   },
 ];
@@ -107,6 +108,9 @@ export default function ActivityHistory({ item }) {
       <DataTable
         columns={columns}
         rows={entries}
+        paginated={false}
+        sortBy="timestamp"
+        sortOrder="desc"
         onRowClick={setSelectedEntry}
       />
       <ActivityDetailModal

@@ -216,8 +216,8 @@ const options = {
         PageSizeParam: {
           in: "query",
           name: "pageSize",
-          schema: { type: "integer", minimum: 1, maximum: 100, default: 50 },
-          description: "Items per page (max 100)",
+          schema: { type: "integer", minimum: 1, maximum: 500, default: 50 },
+          description: "Items per page (max 500)",
         },
         SortOrderParam: {
           in: "query",

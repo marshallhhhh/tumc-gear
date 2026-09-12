@@ -5,7 +5,7 @@ export function useItems(params, { enabled = true } = {}) {
   return useQuery({
     queryKey: ["items", params],
     queryFn: () => itemsApi.getItems(params),
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
     enabled,
   });
 }

@@ -1,99 +1,105 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  TablePagination,
-  Paper,
-} from "@mui/material";
+import { Paper } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+/**
+ * Client-side table wrapper around MUI DataGrid. Sorting, filtering and
+ * pagination are handled by the grid itself — pass the full row set once and
+ * let the user slice it without further network/DB round-trips.
+ *
+ * Column shape: { id, label, render?, value?, type?, sortable?, filterable?, sx? }
+ * `value(row)` supplies the raw value used for sorting/filtering/quick search
+ * when `render` produces non-textual content.
+ */
 export default function DataTable({
   columns,
   rows,
-  totalCount = 0,
-  page = 0,
-  pageSize = 50,
+  loading,
+  onRowClick,
+  fillHeight = false,
+  paginated = true,
+  pageSize = 25,
   sortBy,
   sortOrder = "asc",
-  onPageChange,
-  onPageSizeChange,
-  onSortChange,
-  onRowClick,
-  loading,
+  showToolbar = false,
+  getRowId,
 }) {
-  const handleSort = (columnId) => {
-    if (!onSortChange) return;
-    const isAsc = sortBy === columnId && sortOrder === "asc";
-    onSortChange(columnId, isAsc ? "desc" : "asc");
-  };
+  const columnSx = {};
+  const gridColumns = columns.map((col) => {
+    if (col.sx) columnSx[`& [data-field="${col.id}"]`] = col.sx;
+    const sortable = col.sortable !== false;
+    return {
+      field: col.id,
+      headerName: col.label ?? "",
+      width: col.width ?? 160,
+      minWidth: col.minWidth ?? 120,
+      flex: col.flex,
+      type: col.type,
+      sortable,
+      filterable: col.filterable ?? sortable,
+      valueGetter: col.value ? (_value, row) => col.value(row) : undefined,
+      renderCell: col.render ? (params) => col.render(params.row) : undefined,
+    };
+  });
+
+  const paginationProps = paginated
+    ? { pageSizeOptions: PAGE_SIZE_OPTIONS }
+    : { hideFooter: true };
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <TableContainer>
-        <Table size="small" aria-busy={loading}>
-          <TableHead>
-            <TableRow>
-              {columns.map((col) => (
-                <TableCell
-                  key={col.id}
-                  sx={{
-                    fontWeight: "bold",
-                    bgcolor: "background.default",
-                    ...col.sx,
-                  }}
-                >
-                  {col.sortable !== false && onSortChange ? (
-                    <TableSortLabel
-                      active={sortBy === col.id}
-                      direction={sortBy === col.id ? sortOrder : "asc"}
-                      onClick={() => handleSort(col.id)}
-                    >
-                      {col.label}
-                    </TableSortLabel>
-                  ) : (
-                    col.label
-                  )}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row, idx) => (
-              <TableRow
-                key={row.id || idx}
-                hover={!!onRowClick}
-                onClick={() => onRowClick?.(row)}
-                sx={{ cursor: onRowClick ? "pointer" : "default" }}
-              >
-                {columns.map((col) => (
-                  <TableCell
-                    key={col.id}
-                    sx={{ color: "text.secondary", ...col.sx }}
-                  >
-                    {col.render ? col.render(row) : row[col.id]}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      {onPageChange && (
-        <TablePagination
-          component="div"
-          count={totalCount}
-          page={page}
-          onPageChange={(_, newPage) => onPageChange(newPage)}
-          rowsPerPage={pageSize}
-          onRowsPerPageChange={(e) =>
-            onPageSizeChange?.(parseInt(e.target.value, 10))
-          }
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
-      )}
+    <Paper
+      sx={{
+        width: "100%",
+        height: fillHeight ? "100%" : "auto",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        minHeight: 0,
+        mb: 2,
+      }}
+    >
+      <DataGrid
+        rows={rows}
+        columns={gridColumns}
+        getRowId={getRowId}
+        loading={loading}
+        autoHeight={!fillHeight}
+        density="compact"
+        disableColumnMenu
+        disableRowSelectionOnClick
+        showToolbar={showToolbar}
+        initialState={{
+          sorting: sortBy
+            ? { sortModel: [{ field: sortBy, sort: sortOrder }] }
+            : undefined,
+          pagination: {
+            paginationModel: { pageSize: paginated ? pageSize : 100 },
+          },
+        }}
+        sortingOrder={["asc", "desc"]}
+        onRowClick={onRowClick ? (params) => onRowClick(params.row) : undefined}
+        {...paginationProps}
+        sx={{
+          flex: fillHeight ? 1 : "none",
+          minHeight: 0,
+          border: 0,
+          "--DataGrid-containerBackground": (theme) =>
+            theme.palette.background.default,
+          "& .MuiDataGrid-columnHeaderTitle": {
+            fontWeight: "bold",
+          },
+          "& .MuiDataGrid-cell": {
+            color: "text.secondary",
+          },
+          "& .MuiDataGrid-row": onRowClick ? { cursor: "pointer" } : undefined,
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: 1,
+            borderColor: "divider",
+          },
+          ...columnSx,
+        }}
+      />
     </Paper>
   );
 }
