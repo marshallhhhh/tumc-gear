@@ -1,6 +1,14 @@
 import { useState, useMemo } from "react";
 import { useUsers, useUser } from "../../hooks/useUsers";
-import { Container, Typography, Chip } from "@mui/material";
+import { Container, Typography, Chip, Stack } from "@mui/material";
+import {
+  AdminPanelSettingsOutlined,
+  PersonOutline,
+  MailOutline,
+  CalendarTodayOutlined,
+  ChevronRight,
+  Inventory2Outlined,
+} from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
@@ -48,16 +56,23 @@ export default function Users() {
     {
       id: "role",
       label: "Role",
-      width: 90,
-      minWidth: 90,
+      width: 110,
+      minWidth: 110,
       value: (row) => row.role,
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
           <Chip
-            label={row.role.charAt(0) + row.role.slice(1).toLowerCase()}
             size="small"
-            color={row.role === "ADMIN" ? "primary" : "warning"}
-            variant="filled"
+            icon={
+              row.role === "ADMIN" ? (
+                <AdminPanelSettingsOutlined fontSize="small" />
+              ) : (
+                <PersonOutline fontSize="small" />
+              )
+            }
+            label={row.role === "ADMIN" ? "Admin" : "Member"}
+            color={row.role === "ADMIN" ? "secondary" : "default"}
+            variant={row.role === "ADMIN" ? "filled" : "outlined"}
           />
         </div>
       ),
@@ -77,10 +92,13 @@ export default function Users() {
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
           <Chip
-            label={row.isActive ? "Active" : "Inactive"}
             size="small"
-            color={row.isActive ? "success" : "error"}
-            variant="filled"
+            label={row.isActive ? "Active" : "Inactive"}
+            color={row.isActive ? "success" : "default"}
+            variant={row.isActive ? "filled" : "outlined"}
+            sx={
+              row.isActive ? { bgcolor: "#ccfcd2", color: "#000" } : undefined
+            }
           />
         </div>
       ),
