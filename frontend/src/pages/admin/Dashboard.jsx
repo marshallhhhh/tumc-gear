@@ -41,7 +41,7 @@ const statCards = [
     key: "activeLoans",
     label: "Active Loans",
     icon: LoansIcon,
-    path: "/admin/loans?status=ACTIVE",
+    path: "/admin/loans",
   },
   {
     key: "overdueLoans",
@@ -51,7 +51,7 @@ const statCards = [
   },
   {
     key: "totalUsers",
-    label: "Total Users",
+    label: "Total Members",
     icon: UsersIcon,
     path: "/admin/users",
   },
@@ -67,7 +67,7 @@ export default function Dashboard() {
         Dashboard
       </Typography>
       {isLoading ? (
-        <CardsSkeleton />
+        <CardsSkeleton count={5} />
       ) : (
         <Grid container spacing={2}>
           {statCards.map(({ key, label, icon: Icon, path }) => {
@@ -93,8 +93,9 @@ export default function Dashboard() {
                         alignItems="center"
                         gap={2}
                         justifyContent="center"
+                        mb={0.5}
                       >
-                        <Icon sx={{ fontSize: 40, color, mb: 1 }} />
+                        <Icon sx={{ fontSize: 40, color }} />
                         <Typography
                           variant="h4"
                           color={color}

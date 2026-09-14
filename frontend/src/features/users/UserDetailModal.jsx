@@ -120,14 +120,14 @@ export default function UserDetailModal({ user, open, onClose }) {
           }}
         >
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={handleToggleRole}
             disabled={updateUser.isPending}
           >
             {user.role === "ADMIN" ? "Make Member" : "Make Admin"}
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             color={user.isActive ? "warning" : "success"}
             onClick={() =>
               user.isActive ? setDeactivateConfirm(true) : handleToggleActive()
@@ -163,7 +163,7 @@ export default function UserDetailModal({ user, open, onClose }) {
         message="Deactivating this user will prevent them from signing in. Continue?"
         onConfirm={handleToggleActive}
         onCancel={() => setDeactivateConfirm(false)}
-        confirmColor="warning"
+        confirmColor="error"
         confirmText="Deactivate"
       />
 

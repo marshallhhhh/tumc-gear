@@ -18,6 +18,8 @@ export default function FoundReports() {
     {
       id: "status",
       label: "Status",
+      width: 100,
+      minWidth: 100,
       value: (row) => row.status,
       render: (row) => <StatusChip status={row.status} />,
     },
@@ -54,7 +56,7 @@ export default function FoundReports() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, p: 0 }}>
       <Typography variant="h4" gutterBottom>
         Found Reports
       </Typography>
@@ -69,7 +71,6 @@ export default function FoundReports() {
           rows={data.data}
           sortBy="createdAt"
           sortOrder="desc"
-          showToolbar
           onRowClick={(row) => setSelectedReport(row)}
         />
       )}

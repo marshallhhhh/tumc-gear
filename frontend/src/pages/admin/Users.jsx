@@ -45,34 +45,43 @@ export default function Users() {
       value: (row) => row.fullName ?? "",
       render: (row) => row.fullName || "—",
     },
-    { id: "email", label: "Email" },
     {
       id: "role",
       label: "Role",
+      width: 90,
+      minWidth: 90,
       value: (row) => row.role,
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-        <Chip
-          label={row.role.charAt(0) + row.role.slice(1).toLowerCase()}
-          size="small"
-          color={row.role === "ADMIN" ? "primary" : "warning"}
-          variant="outlined"
-        />
+          <Chip
+            label={row.role.charAt(0) + row.role.slice(1).toLowerCase()}
+            size="small"
+            color={row.role === "ADMIN" ? "primary" : "warning"}
+            variant="filled"
+          />
         </div>
       ),
     },
     {
+      id: "email",
+      label: "Email",
+      width: 250,
+      minWidth: 100,
+    },
+    {
       id: "isActive",
       label: "Status",
+      width: 90,
+      minWidth: 90,
       value: (row) => (row.isActive ? "Active" : "Inactive"),
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-        <Chip
-          label={row.isActive ? "Active" : "Inactive"}
-          size="small"
-          color={row.isActive ? "success" : "warning"}
-          variant="outlined"
-        />
+          <Chip
+            label={row.isActive ? "Active" : "Inactive"}
+            size="small"
+            color={row.isActive ? "success" : "error"}
+            variant="filled"
+          />
         </div>
       ),
     },

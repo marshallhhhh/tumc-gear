@@ -108,14 +108,13 @@ export default function Loans() {
     {
       id: "status",
       label: "Status",
-      width: 110,
-      minWidth: 110,
+      width: 100,
+      minWidth: 100,
       value: (row) => (isOverdue(row) ? "OVERDUE" : row.status),
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
           <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
         </div>
-        
       ),
     },
     {
@@ -124,20 +123,20 @@ export default function Loans() {
       value: (row) => row.item?.name ?? "",
       render: (row) => (
         <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-        <Typography
-          variant="body2"
-          sx={{
-            cursor: "pointer",
-            color: "primary.main",
-            "&:hover": { textDecoration: "underline" },
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/admin/items/${row.item?.shortId}`);
-          }}
-        >
-          {row.item?.name}
-        </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              cursor: "pointer",
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/items/${row.item?.shortId}`);
+            }}
+          >
+            {row.item?.name}
+          </Typography>
         </div>
       ),
     },
