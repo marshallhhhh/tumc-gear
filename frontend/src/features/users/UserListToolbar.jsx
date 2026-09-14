@@ -109,7 +109,7 @@ export default function UserListToolbar({
               ),
             },
           }}
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: 50, flex: 1 }}
         />
 
         <Box

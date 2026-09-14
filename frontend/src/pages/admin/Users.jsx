@@ -82,9 +82,9 @@ export default function Users() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, p: 0 }}>
       <Typography variant="h4" gutterBottom>
-        Users
+        Members
       </Typography>
 
       {isLoading ? (

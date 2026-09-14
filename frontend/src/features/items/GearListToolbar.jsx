@@ -112,7 +112,6 @@ export default function GearListToolbar({
           gap: 2,
           p: 1,
           width: "100%",
-          flexWrap: "wrap",
           alignItems: "center",
         }}
       >
@@ -121,6 +120,7 @@ export default function GearListToolbar({
           size="small"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
+          sx={{ flex: 1, minWidth: 50 }}
           slotProps={{
             input: {
               startAdornment: (
@@ -130,7 +130,6 @@ export default function GearListToolbar({
               ),
             },
           }}
-          sx={{ minWidth: 200 }}
         />
 
         <Box
@@ -178,12 +177,6 @@ export default function GearListToolbar({
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             transformOrigin={{ vertical: "top", horizontal: "right" }}
           >
-            <ExportPrint
-              render={<MenuItem />}
-              onClick={() => setExportAnchorEl(null)}
-            >
-              Print
-            </ExportPrint>
             <ExportCsv
               render={<MenuItem />}
               options={{ fileName: "gear" }}

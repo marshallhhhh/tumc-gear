@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoans, useCancelLoan } from "../../hooks/useLoans";
 import { useNotification } from "../../context/NotificationContext";
@@ -10,6 +10,7 @@ import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
 import LoanDetailModal from "../../features/loans/LoanDetailModal";
 import { formatDate } from "../../utils/date";
+import LoanListToolbar from "../../features/loans/LoanListToolbar";
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&
@@ -23,9 +24,25 @@ export default function Loans() {
 
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [search, setSearch] = useState("");
 
   // Single request for the whole list; the grid slices it client-side.
   const { data, isLoading } = useLoans({ pageSize: 500 });
+
+  const allLoans = useMemo(() => data?.data ?? [], [data]);
+
+  const rows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return allLoans;
+    return allLoans.filter(
+      (loan) =>
+        loan.item?.name?.toLowerCase().includes(term) ||
+        loan.user?.fullName?.toLowerCase().includes(term) ||
+        loan.user?.email?.toLowerCase().includes(term),
+    );
+  }, [allLoans, search]);
+
+  const toolbarProps = { search, onSearchChange: setSearch };
 
   const handleCancel = async () => {
     setCancelConfirm(false);
@@ -101,15 +118,16 @@ export default function Loans() {
 
       {isLoading ? (
         <TableSkeleton />
-      ) : !data?.data?.length ? (
+      ) : !allLoans.length ? (
         <EmptyState message="No loans found" />
       ) : (
         <DataTable
           columns={columns}
-          rows={data.data}
+          rows={rows}
           sortBy="checkoutDate"
           sortOrder="desc"
-          showToolbar
+          toolbar={LoanListToolbar}
+          toolbarProps={toolbarProps}
           onRowClick={(row) => setSelectedLoan(row)}
         />
       )}

@@ -69,7 +69,7 @@ export default function Dashboard() {
       {isLoading ? (
         <CardsSkeleton />
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {statCards.map(({ key, label, icon: Icon, path }) => {
             const value = stats?.[key] ?? 0;
             let color = defaultColor;

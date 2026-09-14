@@ -92,6 +92,7 @@ export default function GearList() {
         height: "100%",
         minHeight: 0,
         mt: 2,
+        p: 0,
       }}
     >
       <Box
