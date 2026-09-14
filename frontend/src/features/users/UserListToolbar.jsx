@@ -1,24 +1,17 @@
 import { useState } from "react";
 import {
   Box,
-  Button,
   Chip,
   FormControl,
   InputAdornment,
   InputLabel,
   Menu,
   MenuItem,
-  Popover,
   Select,
-  Stack,
   TextField,
   Tooltip,
 } from "@mui/material";
-import {
-  Search as SearchIcon,
-  FilterList as FilterListIcon,
-  FileDownload as FileDownloadIcon,
-} from "@mui/icons-material";
+import { Search as SearchIcon, FileDownload as FileDownloadIcon } from "@mui/icons-material";
 import {
   Toolbar,
   ToolbarButton,
@@ -27,9 +20,8 @@ import {
 } from "@mui/x-data-grid";
 
 /**
- * Toolbar for the admin user list: free-text search, a role filter (inline
- * on wide screens, in a popover below `md`) and the built-in DataGrid
- * CSV/print export.
+ * Toolbar for the admin user list: free-text search, an inline role filter
+ * and the built-in DataGrid CSV/print export.
  */
 export default function UserListToolbar({
   search,
@@ -37,51 +29,7 @@ export default function UserListToolbar({
   role,
   onRoleChange,
 }) {
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
-
-  const activeFilterCount = [role].filter(Boolean).length;
-
-  const renderFilterFields = (stacked) => (
-    <FormControl
-      size="small"
-      fullWidth={stacked}
-      sx={{ minWidth: stacked ? undefined : 140 }}
-    >
-      <InputLabel>Role</InputLabel>
-      <Select
-        value={role}
-        onChange={(e) => onRoleChange(e.target.value)}
-        label="Role"
-        renderValue={(value) =>
-          value ? (
-            <Chip
-              label={value.charAt(0) + value.slice(1).toLowerCase()}
-              size="small"
-              color={value === "ADMIN" ? "primary" : "warning"}
-              variant="outlined"
-            />
-          ) : (
-            <span style={{ color: "text.secondary" }}>All Roles</span>
-          )
-        }
-      >
-        <MenuItem value="">All</MenuItem>
-        <MenuItem value="ADMIN"><Chip
-              label="Admin"
-              size="small"
-              color="primary"
-              variant="outlined"
-            /></MenuItem>
-        <MenuItem value="MEMBER"><Chip
-              label="Member"
-              size="small"
-              color="warning"
-              variant="outlined"
-            /></MenuItem>
-      </Select>
-    </FormControl>
-  );
 
   return (
     <Toolbar>
@@ -112,37 +60,34 @@ export default function UserListToolbar({
           sx={{ minWidth: 50, flex: 1 }}
         />
 
-        <Box
-          sx={{
-            display: { xs: "none", md: "flex" },
-            gap: 2,
-            flexWrap: "wrap",
-          }}
-        >
-          {renderFilterFields(false)}
-        </Box>
-
-        <Button
-          variant="outlined"
-          startIcon={<FilterListIcon />}
-          onClick={(e) => setFilterAnchorEl(e.currentTarget)}
-          sx={{
-            display: { xs: "inline-flex", md: "none" },
-            height: 40,
-          }}
-        >
-          Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-        </Button>
-        <Popover
-          open={Boolean(filterAnchorEl)}
-          anchorEl={filterAnchorEl}
-          onClose={() => setFilterAnchorEl(null)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        >
-          <Stack sx={{ p: 2, gap: 2, minWidth: 220 }}>
-            {renderFilterFields(true)}
-          </Stack>
-        </Popover>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Role</InputLabel>
+          <Select
+            value={role}
+            onChange={(e) => onRoleChange(e.target.value)}
+            label="Role"
+            renderValue={(value) =>
+              value ? (
+                <Chip
+                  label={value.charAt(0) + value.slice(1).toLowerCase()}
+                  size="small"
+                  color={value === "ADMIN" ? "primary" : "warning"}
+                  variant="outlined"
+                />
+              ) : (
+                <span style={{ color: "text.secondary" }}>All Roles</span>
+              )
+            }
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="ADMIN">
+              <Chip label="Admin" size="small" color="primary" variant="outlined" />
+            </MenuItem>
+            <MenuItem value="MEMBER">
+              <Chip label="Member" size="small" color="warning" variant="outlined" />
+            </MenuItem>
+          </Select>
+        </FormControl>
 
         <Box sx={{ ml: "auto" }}>
           <Tooltip title="Export">
