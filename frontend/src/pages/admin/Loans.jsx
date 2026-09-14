@@ -25,24 +25,51 @@ export default function Loans() {
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [borrower, setBorrower] = useState("");
 
   // Single request for the whole list; the grid slices it client-side.
   const { data, isLoading } = useLoans({ pageSize: 500 });
 
   const allLoans = useMemo(() => data?.data ?? [], [data]);
 
+  const borrowers = useMemo(() => {
+    const byId = new Map();
+    for (const loan of allLoans) {
+      if (loan.user?.id && !byId.has(loan.user.id)) {
+        byId.set(loan.user.id, {
+          id: loan.user.id,
+          label: loan.user.fullName || loan.user.email || "",
+        });
+      }
+    }
+    return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
+  }, [allLoans]);
+
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return allLoans;
-    return allLoans.filter(
-      (loan) =>
+    return allLoans.filter((loan) => {
+      if (status && (isOverdue(loan) ? "OVERDUE" : loan.status) !== status)
+        return false;
+      if (borrower && loan.user?.id !== borrower) return false;
+      if (!term) return true;
+      return (
         loan.item?.name?.toLowerCase().includes(term) ||
         loan.user?.fullName?.toLowerCase().includes(term) ||
-        loan.user?.email?.toLowerCase().includes(term),
-    );
-  }, [allLoans, search]);
+        loan.user?.email?.toLowerCase().includes(term)
+      );
+    });
+  }, [allLoans, search, status, borrower]);
 
-  const toolbarProps = { search, onSearchChange: setSearch };
+  const toolbarProps = {
+    search,
+    onSearchChange: setSearch,
+    status,
+    onStatusChange: setStatus,
+    borrowers,
+    borrower,
+    onBorrowerChange: setBorrower,
+  };
 
   const handleCancel = async () => {
     setCancelConfirm(false);
@@ -59,6 +86,14 @@ export default function Loans() {
   };
 
   const columns = [
+    {
+      id: "status",
+      label: "Status",
+      value: (row) => (isOverdue(row) ? "OVERDUE" : row.status),
+      render: (row) => (
+        <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
+      ),
+    },
     {
       id: "item",
       label: "Item",
@@ -100,18 +135,10 @@ export default function Loans() {
       value: (row) => (row.dueDate ? new Date(row.dueDate) : null),
       render: (row) => formatDate(row.dueDate),
     },
-    {
-      id: "status",
-      label: "Status",
-      value: (row) => (isOverdue(row) ? "OVERDUE" : row.status),
-      render: (row) => (
-        <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
-      ),
-    },
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, p: 0 }}>
       <Typography variant="h4" gutterBottom>
         Loans
       </Typography>
