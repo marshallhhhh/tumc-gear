@@ -33,7 +33,7 @@ const statCards = [
   },
   {
     key: "openFoundReports",
-    label: "Open Found Reports",
+    label: "Found Reports",
     icon: ReportsIcon,
     path: "/admin/found-reports?status=OPEN",
   },
@@ -81,9 +81,9 @@ export default function Dashboard() {
 
             return (
               <Grid key={key} size={{ xs: 6, sm: 6, md: 4 }}>
-                <Card>
-                  <CardActionArea onClick={() => navigate(path)}>
-                    <CardContent sx={{ textAlign: "center" }}>
+                <Card flex="1" sx={{ height: "100%" }}>
+                  <CardActionArea onClick={() => navigate(path)} sx={{ textAlign: "center", justifyContent: "center" }}>
+                    <CardContent >
                       <Box
                         display="flex"
                         flexDirection="row"

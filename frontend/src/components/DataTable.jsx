@@ -17,7 +17,6 @@ export default function DataTable({
   rows,
   loading,
   onRowClick,
-  fillHeight = false,
   paginated = true,
   pageSize = 25,
   sortBy,
@@ -53,10 +52,8 @@ export default function DataTable({
     <Paper
       sx={{
         width: "100%",
-        height: fillHeight ? "100%" : "auto",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
         minHeight: 0,
         mb: 2,
       }}
@@ -66,9 +63,6 @@ export default function DataTable({
         columns={gridColumns}
         getRowId={getRowId}
         loading={loading}
-        autoHeight={!fillHeight}
-        autosizeOnMount
-        autosizeOptions={{ includeOutliers: true, includeHeaders: true, expand: true }}
         density="compact"
         disableColumnMenu
         disableRowSelectionOnClick
@@ -89,7 +83,6 @@ export default function DataTable({
         onRowClick={onRowClick ? (params) => onRowClick(params.row) : undefined}
         {...paginationProps}
         sx={{
-          flex: fillHeight ? 1 : "none",
           minHeight: 0,
           border: 0,
           "--DataGrid-containerBackground": (theme) =>

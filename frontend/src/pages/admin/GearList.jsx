@@ -91,7 +91,6 @@ export default function GearList() {
         flex: 1,
         height: "100%",
         minHeight: 0,
-        overflow: "hidden",
         mt: 2,
       }}
     >
@@ -125,7 +124,6 @@ export default function GearList() {
             rows={rows}
             sortBy="name"
             sortOrder="asc"
-            fillHeight
             toolbar={GearListToolbar}
             toolbarProps={toolbarProps}
             onRowClick={(row) => navigate(`/admin/items/${row.shortId}`)}
