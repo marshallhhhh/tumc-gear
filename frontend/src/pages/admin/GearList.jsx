@@ -62,7 +62,12 @@ export default function GearList() {
       width: 38,
       minWidth: 38,
       sortable: false,
-      sx: { px: 0, display: "flex", justifyContent: "center", alignItems: "center" },
+      sx: {
+        px: 0,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      },
       render: (row) => row.qrTag && <QrIcon fontSize="small" />,
     },
     {

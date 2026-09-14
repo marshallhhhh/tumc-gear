@@ -18,12 +18,7 @@ import {
   FilterList as FilterListIcon,
   FileDownload as FileDownloadIcon,
 } from "@mui/icons-material";
-import {
-  Toolbar,
-  ToolbarButton,
-  ExportCsv,
-  ExportPrint,
-} from "@mui/x-data-grid";
+import { Toolbar, ToolbarButton, ExportCsv } from "@mui/x-data-grid";
 
 /**
  * Toolbar for the admin gear list: free-text search, resource filters

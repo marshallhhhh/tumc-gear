@@ -11,7 +11,10 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { Search as SearchIcon, FileDownload as FileDownloadIcon } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  FileDownload as FileDownloadIcon,
+} from "@mui/icons-material";
 import {
   Toolbar,
   ToolbarButton,
@@ -81,10 +84,20 @@ export default function UserListToolbar({
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="ADMIN">
-              <Chip label="Admin" size="small" color="primary" variant="outlined" />
+              <Chip
+                label="Admin"
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
             </MenuItem>
             <MenuItem value="MEMBER">
-              <Chip label="Member" size="small" color="warning" variant="outlined" />
+              <Chip
+                label="Member"
+                size="small"
+                color="warning"
+                variant="outlined"
+              />
             </MenuItem>
           </Select>
         </FormControl>

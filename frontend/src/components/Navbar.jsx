@@ -196,7 +196,7 @@ export default function Navbar() {
                 <MenuItem
                   onClick={() => {
                     setLoansMenuAnchor(null);
-                    navigate("/admin/loans?overdue=true");
+                    navigate("/admin/loans?status=overdue");
                   }}
                 >
                   Overdue Loans

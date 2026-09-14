@@ -47,7 +47,7 @@ const statCards = [
     key: "overdueLoans",
     label: "Overdue Loans",
     icon: OverdueIcon,
-    path: "/admin/loans?overdue=true",
+    path: "/admin/loans?status=overdue",
   },
   {
     key: "totalUsers",
@@ -82,8 +82,11 @@ export default function Dashboard() {
             return (
               <Grid key={key} size={{ xs: 6, sm: 6, md: 4 }}>
                 <Card flex="1" sx={{ height: "100%" }}>
-                  <CardActionArea onClick={() => navigate(path)} sx={{ textAlign: "center", justifyContent: "center" }}>
-                    <CardContent >
+                  <CardActionArea
+                    onClick={() => navigate(path)}
+                    sx={{ textAlign: "center", justifyContent: "center" }}
+                  >
+                    <CardContent>
                       <Box
                         display="flex"
                         flexDirection="row"
