@@ -59,10 +59,10 @@ export default function GearList() {
     { id: "name", label: "Name" },
     {
       id: "hasqr",
-      width: 48,
-      minWidth: 48,
+      width: 38,
+      minWidth: 38,
       sortable: false,
-      sx: { px: 0 },
+      sx: { px: 0, display: "flex", justifyContent: "center", alignItems: "center" },
       render: (row) => row.qrTag && <QrIcon fontSize="small" />,
     },
     {
