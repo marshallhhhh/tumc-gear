@@ -172,7 +172,7 @@ export default function Navbar() {
                 Gear
               </Button>
               <Button color="inherit" component={RouterLink} to="/admin/users">
-                Users
+                Members
               </Button>
               <Button
                 color="inherit"
@@ -420,7 +420,7 @@ function MobileNav({
               key="overdue"
               onClick={() => {
                 setMoreMenuAnchor(null);
-                navigate("/admin/loans?overdue=true");
+                navigate("/admin/loans?status=overdue");
               }}
             >
               <ListItemIcon>

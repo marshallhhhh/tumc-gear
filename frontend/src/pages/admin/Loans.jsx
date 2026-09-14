@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLoans, useCancelLoan } from "../../hooks/useLoans";
 import { useNotification } from "../../context/NotificationContext";
@@ -41,6 +41,11 @@ export default function Loans() {
     }
     setSearchParams(params);
   };
+
+  // Sync status state when URL params change (e.g. from navbar navigation)
+  useEffect(() => {
+    setStatus(searchParams.get("status")?.toUpperCase() || "");
+  }, [searchParams]);
 
   // Single request for the whole list; the grid slices it client-side.
   const { data, isLoading } = useLoans({ pageSize: 500 });
