@@ -51,12 +51,14 @@ export default function Users() {
       label: "Role",
       value: (row) => row.role,
       render: (row) => (
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
         <Chip
           label={row.role.charAt(0) + row.role.slice(1).toLowerCase()}
           size="small"
           color={row.role === "ADMIN" ? "primary" : "warning"}
           variant="outlined"
         />
+        </div>
       ),
     },
     {
@@ -64,12 +66,14 @@ export default function Users() {
       label: "Status",
       value: (row) => (row.isActive ? "Active" : "Inactive"),
       render: (row) => (
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
         <Chip
           label={row.isActive ? "Active" : "Inactive"}
           size="small"
           color={row.isActive ? "success" : "warning"}
           variant="outlined"
         />
+        </div>
       ),
     },
     {

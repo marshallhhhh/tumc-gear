@@ -1,29 +1,10 @@
-import { useState } from "react";
-import {
-  Box,
-  Button,
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  Menu,
-  MenuItem,
-  Popover,
-  Select,
-  Stack,
-  TextField,
-  Tooltip,
-} from "@mui/material";
-import {
-  Search as SearchIcon,
-  FilterList as FilterListIcon,
-  FileDownload as FileDownloadIcon,
-} from "@mui/icons-material";
-import { Toolbar, ToolbarButton, ExportCsv } from "@mui/x-data-grid";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import ListToolbar from "../../components/ListToolbar";
 
 /**
  * Toolbar for the admin gear list: free-text search, resource filters
- * (inline on wide screens, in a popover below `custom_800`) and the
- * built-in DataGrid CSV/print export.
+ * (inline on wide screens, in a popover below `md`) and the built-in
+ * DataGrid CSV export.
  */
 export default function GearListToolbar({
   search,
@@ -36,14 +17,11 @@ export default function GearListToolbar({
   hasLoan,
   onHasLoanChange,
 }) {
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [exportAnchorEl, setExportAnchorEl] = useState(null);
-
   const activeFilterCount = [category, hasQrTag, hasLoan].filter(
     Boolean,
   ).length;
 
-  const renderFilterFields = (stacked) => (
+  const renderFilters = (stacked) => (
     <>
       <FormControl
         size="small"
@@ -100,88 +78,12 @@ export default function GearListToolbar({
   );
 
   return (
-    <Toolbar>
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          p: 1,
-          width: "100%",
-          alignItems: "center",
-        }}
-      >
-        <TextField
-          placeholder="Search..."
-          size="small"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          sx={{ flex: 1, minWidth: 50 }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-
-        <Box
-          sx={{
-            display: { xs: "none", md: "flex" },
-            gap: 2,
-            flexWrap: "wrap",
-          }}
-        >
-          {renderFilterFields(false)}
-        </Box>
-
-        <Button
-          variant="outlined"
-          startIcon={<FilterListIcon />}
-          onClick={(e) => setFilterAnchorEl(e.currentTarget)}
-          sx={{
-            display: { xs: "inline-flex", md: "none" },
-            height: 40,
-          }}
-        >
-          Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-        </Button>
-        <Popover
-          open={Boolean(filterAnchorEl)}
-          anchorEl={filterAnchorEl}
-          onClose={() => setFilterAnchorEl(null)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        >
-          <Stack sx={{ p: 2, gap: 2, minWidth: 220 }}>
-            {renderFilterFields(true)}
-          </Stack>
-        </Popover>
-
-        <Box sx={{ ml: "auto" }}>
-          <Tooltip title="Export">
-            <ToolbarButton onClick={(e) => setExportAnchorEl(e.currentTarget)}>
-              <FileDownloadIcon fontSize="small" />
-            </ToolbarButton>
-          </Tooltip>
-          <Menu
-            anchorEl={exportAnchorEl}
-            open={Boolean(exportAnchorEl)}
-            onClose={() => setExportAnchorEl(null)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-          >
-            <ExportCsv
-              render={<MenuItem />}
-              options={{ fileName: "gear" }}
-              onClick={() => setExportAnchorEl(null)}
-            >
-              Download as CSV
-            </ExportCsv>
-          </Menu>
-        </Box>
-      </Box>
-    </Toolbar>
+    <ListToolbar
+      search={search}
+      onSearchChange={onSearchChange}
+      exportFileName="gear"
+      renderFilters={renderFilters}
+      activeFilterCount={activeFilterCount}
+    />
   );
 }

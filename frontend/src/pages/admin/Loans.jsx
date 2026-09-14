@@ -112,7 +112,10 @@ export default function Loans() {
       minWidth: 110,
       value: (row) => (isOverdue(row) ? "OVERDUE" : row.status),
       render: (row) => (
-        <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+          <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
+        </div>
+        
       ),
     },
     {
@@ -120,6 +123,7 @@ export default function Loans() {
       label: "Item",
       value: (row) => row.item?.name ?? "",
       render: (row) => (
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
         <Typography
           variant="body2"
           sx={{
@@ -134,6 +138,7 @@ export default function Loans() {
         >
           {row.item?.name}
         </Typography>
+        </div>
       ),
     },
     {
