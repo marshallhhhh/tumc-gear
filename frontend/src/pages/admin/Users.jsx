@@ -1,14 +1,7 @@
 import { useState, useMemo } from "react";
 import { useUsers, useUser } from "../../hooks/useUsers";
-import { Container, Typography, Chip, Stack } from "@mui/material";
-import {
-  AdminPanelSettingsOutlined,
-  PersonOutline,
-  MailOutline,
-  CalendarTodayOutlined,
-  ChevronRight,
-  Inventory2Outlined,
-} from "@mui/icons-material";
+import { Container, Typography, Chip } from "@mui/material";
+import { AdminPanelSettingsOutlined, PersonOutline } from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
