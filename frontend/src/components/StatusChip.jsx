@@ -1,7 +1,11 @@
 import { Chip } from "@mui/material";
 
 const statusConfig = {
-  ACTIVE: { label: "Active", color: "success" },
+  ACTIVE: {
+    label: "Active",
+    color: "success",
+    sx: { backgroundColor: "#ccfcd2", color: "#000000" },
+  },
   RETURNED: { label: "Returned", color: "success" },
   CANCELLED: { label: "Cancelled", color: "background" },
   OVERDUE: { label: "Overdue", color: "error" },
@@ -14,7 +18,19 @@ const statusConfig = {
 };
 
 export default function StatusChip({ status, size = "small" }) {
-  const config = statusConfig[status] || { label: status, color: "default" };
+  const config = statusConfig[status] || {
+    label: status,
+    color: "default",
+    variant: "filled",
+  };
 
-  return <Chip label={config.label} color={config.color} size={size} />;
+  return (
+    <Chip
+      label={config.label}
+      color={config.color}
+      variant={config.variant}
+      size={size}
+      sx={config.sx}
+    />
+  );
 }

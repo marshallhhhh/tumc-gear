@@ -243,6 +243,7 @@ export async function listItems(query) {
       { name: { contains: search, mode: "insensitive" } },
       { shortId: { contains: search, mode: "insensitive" } },
       { serialNumber: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
     ];
   }
 

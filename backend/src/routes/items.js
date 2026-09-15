@@ -38,7 +38,7 @@ const getQuerySchema = z
 const listQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).optional(),
-    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    pageSize: z.coerce.number().int().min(1).max(500).optional(),
     sortBy: z.enum(["name", "createdAt", "updatedAt", "category"]).optional(),
     sortOrder: z.enum(["asc", "desc"]).optional(),
     category: z.uuid().optional(),

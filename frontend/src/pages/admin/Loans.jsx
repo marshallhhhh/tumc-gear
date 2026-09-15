@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useLoans, useCancelLoan } from "../../hooks/useLoans";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAllLoans, useCancelLoan } from "../../hooks/useLoans";
+import useListState from "../../hooks/useListState";
 import { useNotification } from "../../context/NotificationContext";
 import { Container, Typography } from "@mui/material";
 import DataTable from "../../components/DataTable";
@@ -8,8 +9,10 @@ import StatusChip from "../../components/StatusChip";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
+import TruncationAlert from "../../components/TruncationAlert";
 import LoanDetailModal from "../../features/loans/LoanDetailModal";
 import { formatDate } from "../../utils/date";
+import LoanListToolbar from "../../features/loans/LoanListToolbar";
 
 const isOverdue = (loan) =>
   loan.status === "ACTIVE" &&
@@ -17,7 +20,6 @@ const isOverdue = (loan) =>
 
 export default function Loans() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { notify } = useNotification();
 
   const cancelLoan = useCancelLoan();
@@ -25,36 +27,78 @@ export default function Loans() {
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [cancelConfirm, setCancelConfirm] = useState(false);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
-  const sortBy = searchParams.get("sortBy") || "createdAt";
-  const sortOrder = searchParams.get("sortOrder") || "desc";
-  const status = searchParams.get("status") || "";
-  const overdue = searchParams.get("overdue") || "";
-
-  const queryParams = {
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-    ...(status && { status }),
-    ...(overdue && { overdue }),
-  };
-
-  const { data, isLoading } = useLoans(queryParams);
-
-  const updateParam = useCallback(
-    (key, value) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        if (key !== "page") next.set("page", "1");
-        return next;
-      });
+  const {
+    search,
+    debouncedSearch,
+    setSearch,
+    filters,
+    setFilter,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+  } = useListState({
+    sortBy: "checkoutDate",
+    sortOrder: "desc",
+    filters: {
+      // Navbar links deep-link with a lowercase status, e.g. ?status=overdue.
+      status: {
+        default: "",
+        parse: (v) => v.toUpperCase(),
+        serialize: (v) => v.toLowerCase(),
+      },
+      borrower: "",
     },
-    [setSearchParams],
-  );
+  });
+
+  // The whole list is fetched once (paged through server-side); the grid then
+  // sorts, filters and paginates it client-side without further requests.
+  const { data, isLoading, isFetching } = useAllLoans();
+
+  const allLoans = useMemo(() => data?.data ?? [], [data]);
+
+  const { status, borrower } = filters;
+
+  const borrowers = useMemo(() => {
+    const byId = new Map();
+    for (const loan of allLoans) {
+      if (loan.user?.id && !byId.has(loan.user.id)) {
+        byId.set(loan.user.id, {
+          id: loan.user.id,
+          label: loan.user.fullName || loan.user.email || "",
+        });
+      }
+    }
+    return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
+  }, [allLoans]);
+
+  const rows = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    return allLoans.filter((loan) => {
+      if (
+        status &&
+        (status === "OVERDUE" ? !isOverdue(loan) : loan.status !== status)
+      )
+        return false;
+      if (borrower && loan.user?.id !== borrower) return false;
+      if (!term) return true;
+      return (
+        loan.item?.name?.toLowerCase().includes(term) ||
+        loan.user?.fullName?.toLowerCase().includes(term) ||
+        loan.user?.email?.toLowerCase().includes(term)
+      );
+    });
+  }, [allLoans, debouncedSearch, status, borrower]);
+
+  const toolbarProps = {
+    search,
+    onSearchChange: setSearch,
+    status,
+    onStatusChange: (value) => setFilter("status", value),
+    borrowers,
+    borrower,
+    onBorrowerChange: (value) => setFilter("borrower", value),
+  };
 
   const handleCancel = async () => {
     setCancelConfirm(false);
@@ -72,75 +116,89 @@ export default function Loans() {
 
   const columns = [
     {
+      id: "status",
+      label: "Status",
+      width: 100,
+      minWidth: 100,
+      value: (row) => (isOverdue(row) ? "OVERDUE" : row.status),
+      render: (row) => (
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+          <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
+        </div>
+      ),
+    },
+    {
       id: "item",
       label: "Item",
-      sortable: false,
+      value: (row) => row.item?.name ?? "",
       render: (row) => (
-        <Typography
-          variant="body2"
-          sx={{
-            cursor: "pointer",
-            color: "primary.main",
-            "&:hover": { textDecoration: "underline" },
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/admin/items/${row.item?.shortId}`);
-          }}
-        >
-          {row.item?.name}
-        </Typography>
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              cursor: "pointer",
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/items/${row.item?.shortId}`);
+            }}
+          >
+            {row.item?.name}
+          </Typography>
+        </div>
       ),
     },
     {
       id: "user",
       label: "Borrower",
-      sortable: false,
+      value: (row) => row.user?.fullName || row.user?.email || "",
       render: (row) => row.user?.fullName || row.user?.email || "—",
     },
     {
       id: "checkoutDate",
       label: "Checkout",
+      type: "date",
+      value: (row) => (row.checkoutDate ? new Date(row.checkoutDate) : null),
       render: (row) => formatDate(row.checkoutDate),
+      width: 120,
+      minWidth: 120,
     },
-    { id: "dueDate", label: "Due", render: (row) => formatDate(row.dueDate) },
     {
-      id: "status",
-      label: "Status",
-      render: (row) => (
-        <StatusChip status={isOverdue(row) ? "OVERDUE" : row.status} />
-      ),
+      id: "dueDate",
+      label: "Due",
+      type: "date",
+      value: (row) => (row.dueDate ? new Date(row.dueDate) : null),
+      render: (row) => formatDate(row.dueDate),
+      width: 120,
+      minWidth: 120,
     },
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, p: 0 }}>
       <Typography variant="h4" gutterBottom>
         Loans
       </Typography>
 
+      {data?.truncated && <TruncationAlert totalCount={data.totalCount} />}
+
       {isLoading ? (
         <TableSkeleton />
-      ) : !data?.data?.length ? (
+      ) : !allLoans.length ? (
         <EmptyState message="No loans found" />
       ) : (
         <DataTable
           columns={columns}
-          rows={data.data}
-          totalCount={data.totalCount}
-          page={page - 1}
-          pageSize={pageSize}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onPageChange={(p) => updateParam("page", String(p + 1))}
-          onPageSizeChange={(ps) => {
-            updateParam("pageSize", String(ps));
-            updateParam("page", "1");
-          }}
-          onSortChange={(col, order) => {
-            updateParam("sortBy", col);
-            updateParam("sortOrder", order);
-          }}
+          rows={rows}
+          loading={isFetching}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
+          toolbar={LoanListToolbar}
+          toolbarProps={toolbarProps}
           onRowClick={(row) => setSelectedLoan(row)}
         />
       )}

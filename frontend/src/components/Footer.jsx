@@ -14,6 +14,7 @@ export default function Footer() {
         borderTop: 1,
         borderColor: "divider",
         mt: "auto",
+        pt: 2,
       }}
     >
       <Typography variant="body2" color="text.secondary">

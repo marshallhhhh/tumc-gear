@@ -1,73 +1,95 @@
-import { useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useFoundReports } from "../../hooks/useFoundReports";
+import { useState, useMemo } from "react";
+import { useAllFoundReports } from "../../hooks/useFoundReports";
+import useListState from "../../hooks/useListState";
 import { Container, Typography } from "@mui/material";
 import DataTable from "../../components/DataTable";
 import StatusChip from "../../components/StatusChip";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
+import TruncationAlert from "../../components/TruncationAlert";
 import FoundReportDetailModal from "../../features/foundReports/FoundReportDetailModal";
+import FoundReportListToolbar from "../../features/foundReports/FoundReportListToolbar";
 import { formatDate } from "../../utils/date";
 
 export default function FoundReports() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedReport, setSelectedReport] = useState(null);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
-  const sortBy = searchParams.get("sortBy") || "createdAt";
-  const sortOrder = searchParams.get("sortOrder") || "desc";
-  const status = searchParams.get("status") || "";
+  const {
+    search,
+    debouncedSearch,
+    setSearch,
+    filters,
+    setFilter,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+  } = useListState({
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    filters: { status: "" },
+  });
 
-  const queryParams = {
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-    ...(status && { status }),
+  // The whole list is fetched once (paged through server-side); the grid then
+  // sorts, filters and paginates it client-side without further requests.
+  const { data, isLoading, isFetching } = useAllFoundReports();
+
+  const allReports = useMemo(() => data?.data ?? [], [data]);
+
+  const { status } = filters;
+
+  const rows = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    return allReports.filter((report) => {
+      if (status && report.status !== status) return false;
+      if (!term) return true;
+      return (
+        report.item?.name?.toLowerCase().includes(term) ||
+        report.contactInfo?.toLowerCase().includes(term) ||
+        report.description?.toLowerCase().includes(term)
+      );
+    });
+  }, [allReports, debouncedSearch, status]);
+
+  const toolbarProps = {
+    search,
+    onSearchChange: setSearch,
+    status,
+    onStatusChange: (value) => setFilter("status", value),
   };
-
-  const { data, isLoading } = useFoundReports(queryParams);
-
-  const updateParam = useCallback(
-    (key, value) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        if (key !== "page") next.set("page", "1");
-        return next;
-      });
-    },
-    [setSearchParams],
-  );
 
   const columns = [
     {
       id: "status",
       label: "Status",
+      width: 100,
+      minWidth: 100,
+      value: (row) => row.status,
       render: (row) => <StatusChip status={row.status} />,
     },
     {
       id: "item",
       label: "Item",
-      sortable: false,
+      value: (row) => row.item?.name ?? "",
       render: (row) => row.item?.name,
     },
     {
       id: "createdAt",
       label: "Reported",
+      type: "date",
+      value: (row) => (row.createdAt ? new Date(row.createdAt) : null),
       render: (row) => formatDate(row.createdAt),
     },
     {
       id: "contactInfo",
       label: "Contact",
+      value: (row) => row.contactInfo ?? "",
       render: (row) => row.contactInfo || "—",
     },
     {
       id: "description",
       label: "Description",
-      sortable: false,
+      value: (row) => row.description ?? "",
       render: (row) =>
         row.description
           ? row.description.length > 50
@@ -78,33 +100,28 @@ export default function FoundReports() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, p: 0 }}>
       <Typography variant="h4" gutterBottom>
         Found Reports
       </Typography>
 
+      {data?.truncated && <TruncationAlert totalCount={data.totalCount} />}
+
       {isLoading ? (
         <TableSkeleton />
-      ) : !data?.data?.length ? (
+      ) : !allReports.length ? (
         <EmptyState message="No found reports" />
       ) : (
         <DataTable
           columns={columns}
-          rows={data.data}
-          totalCount={data.totalCount}
-          page={page - 1}
-          pageSize={pageSize}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onPageChange={(p) => updateParam("page", String(p + 1))}
-          onPageSizeChange={(ps) => {
-            updateParam("pageSize", String(ps));
-            updateParam("page", "1");
-          }}
-          onSortChange={(col, order) => {
-            updateParam("sortBy", col);
-            updateParam("sortOrder", order);
-          }}
+          rows={rows}
+          loading={isFetching}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
+          toolbar={FoundReportListToolbar}
+          toolbarProps={toolbarProps}
           onRowClick={(row) => setSelectedReport(row)}
         />
       )}

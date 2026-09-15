@@ -33,7 +33,7 @@ const statCards = [
   },
   {
     key: "openFoundReports",
-    label: "Open Found Reports",
+    label: "Found Reports",
     icon: ReportsIcon,
     path: "/admin/found-reports?status=OPEN",
   },
@@ -47,11 +47,11 @@ const statCards = [
     key: "overdueLoans",
     label: "Overdue Loans",
     icon: OverdueIcon,
-    path: "/admin/loans?overdue=true",
+    path: "/admin/loans?status=overdue",
   },
   {
     key: "totalUsers",
-    label: "Total Users",
+    label: "Total Members",
     icon: UsersIcon,
     path: "/admin/users",
   },
@@ -67,9 +67,9 @@ export default function Dashboard() {
         Dashboard
       </Typography>
       {isLoading ? (
-        <CardsSkeleton />
+        <CardsSkeleton count={5} />
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {statCards.map(({ key, label, icon: Icon, path }) => {
             const value = stats?.[key] ?? 0;
             let color = defaultColor;
@@ -81,17 +81,21 @@ export default function Dashboard() {
 
             return (
               <Grid key={key} size={{ xs: 6, sm: 6, md: 4 }}>
-                <Card>
-                  <CardActionArea onClick={() => navigate(path)}>
-                    <CardContent sx={{ textAlign: "center" }}>
+                <Card flex="1" sx={{ height: "100%" }}>
+                  <CardActionArea
+                    onClick={() => navigate(path)}
+                    sx={{ textAlign: "center", justifyContent: "center" }}
+                  >
+                    <CardContent>
                       <Box
                         display="flex"
                         flexDirection="row"
                         alignItems="center"
                         gap={2}
                         justifyContent="center"
+                        mb={0.5}
                       >
-                        <Icon sx={{ fontSize: 40, color, mb: 1 }} />
+                        <Icon sx={{ fontSize: 40, color }} />
                         <Typography
                           variant="h4"
                           color={color}

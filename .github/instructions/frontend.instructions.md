@@ -69,7 +69,7 @@ utils/date.js
 ## UI conventions
 
 - Use the shared components rather than re-implementing: `DataTable`, `StatusChip`, `EmptyState`, `ConfirmDialog`, the styled `Dialog`/`DialogTitle`/`DialogContent`/`DialogActions` from `components/Dialog.jsx`, `PageSkeleton` exports (`TableSkeleton`, `DetailSkeleton`, `CardsSkeleton`), `NumberSpinner`, `QrScanner`, `LocationMinimap`.
-- `DataTable` takes a `columns` array of `{ id, label, render?, sortable?, sx? }` and 0-based `page`; the API is 1-based, so convert (`page={page - 1}`, `updateParam("page", String(p + 1))`).
+- `DataTable` is a **client-side** MUI `DataGrid` wrapper: sorting, filtering, quick search and pagination are handled by the grid. Pass the full row set once. Columns are `{ id, label, render?, value?, type?, sortable?, filterable?, width?, minWidth?, flex?, sx? }`; use `value(row)` to supply the raw sort/filter value when `render` returns JSX, and `type: "date"` (with `value` returning a `Date`) for date columns. Other props: `sortBy`/`sortOrder` (initial sort), `pageSize`, `paginated={false}`, `showToolbar`, `onRowClick`.
 - `StatusChip` maps status strings to label/colour in a single `statusConfig` map — extend that map instead of hardcoding chips.
 - Styling is done with MUI `sx` props and layout props on `Box`/`Stack`; only `App.css` / `index.css` exist for globals. Use theme tokens (`text.secondary`, `background.default`, `primary.main`) rather than raw hex values; the palette and shared overrides live in `theme.js`.
 - Loading states render a skeleton, empty results render `EmptyState`.
@@ -86,7 +86,7 @@ utils/date.js
 
 ## List pages
 
-Admin list pages keep filter/pagination/sort state in the URL via `useSearchParams` (`page`, `pageSize`, `sortBy`, `sortOrder`, `search`, plus resource filters), debounce search input (~300 ms with a `setTimeout` effect), and reset `page` to `1` whenever another param changes.
+Admin list pages issue **one** request for the whole dataset (`{ pageSize: 500 }`, the backend cap) and let `DataTable`/`DataGrid` do sorting, filtering and pagination in the browser — no URL search params, no debounced server search, no per-interaction refetch. Extra resource filters (e.g. category, has-QR) are local `useState` applied to the rows with `useMemo`. List queries use a 5-minute `staleTime`; mutations invalidate the relevant query keys.
 
 ## Dates
 

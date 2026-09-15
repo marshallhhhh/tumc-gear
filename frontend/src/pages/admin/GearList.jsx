@@ -1,95 +1,104 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useItems } from "../../hooks/useItems";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAllItems } from "../../hooks/useItems";
 import { useCategories } from "../../hooks/useCategories";
-import {
-  Container,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  QrCode as QrIcon,
-} from "@mui/icons-material";
+import useListState from "../../hooks/useListState";
+import { Container, Typography, Box, Button } from "@mui/material";
+import { Add as AddIcon, QrCode as QrIcon } from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
 import StatusChip from "../../components/StatusChip";
 import EmptyState from "../../components/EmptyState";
+import TruncationAlert from "../../components/TruncationAlert";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import CreateItemDialog from "../../features/items/CreateItemDialog";
+import GearListToolbar from "../../features/items/GearListToolbar";
 
 export default function GearList() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories } = useCategories();
 
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
-  const sortBy = searchParams.get("sortBy") || "name";
-  const sortOrder = searchParams.get("sortOrder") || "asc";
-  const category = searchParams.get("category") || "";
-  const hasLoan = searchParams.get("hasLoan") || "";
-  const hasQrTag = searchParams.get("hasQrTag") || "";
+  const {
+    search,
+    debouncedSearch,
+    setSearch,
+    filters,
+    setFilter,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+  } = useListState({
+    sortBy: "name",
+    sortOrder: "asc",
+    filters: { category: "", hasQrTag: "", hasLoan: "" },
+  });
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
+  // The whole list is fetched once (paged through server-side); the grid then
+  // sorts, filters and paginates it client-side without further requests.
+  const { data, isLoading, isFetching } = useAllItems();
 
-  const queryParams = {
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-    ...(debouncedSearch && { search: debouncedSearch }),
-    ...(category && { category }),
-    ...(hasLoan && { hasLoan }),
-    ...(hasQrTag && { hasQrTag }),
+  const allItems = useMemo(() => data?.data ?? [], [data]);
+
+  const { category, hasQrTag, hasLoan } = filters;
+
+  const rows = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    return allItems.filter((item) => {
+      if (category && item.category?.id !== category) return false;
+      if (hasQrTag && Boolean(item.qrTag) !== (hasQrTag === "true"))
+        return false;
+      if (hasLoan && Boolean(item.hasActiveLoan) !== (hasLoan === "true"))
+        return false;
+      if (!term) return true;
+      return (
+        item.name?.toLowerCase().includes(term) ||
+        item.shortId?.toLowerCase().includes(term) ||
+        item.serialNumber?.toLowerCase().includes(term) ||
+        item.description?.toLowerCase().includes(term)
+      );
+    });
+  }, [allItems, debouncedSearch, category, hasQrTag, hasLoan]);
+
+  const toolbarProps = {
+    search,
+    onSearchChange: setSearch,
+    categories,
+    category,
+    onCategoryChange: (value) => setFilter("category", value),
+    hasQrTag,
+    onHasQrTagChange: (value) => setFilter("hasQrTag", value),
+    hasLoan,
+    onHasLoanChange: (value) => setFilter("hasLoan", value),
   };
-
-  const { data, isLoading } = useItems(queryParams);
-
-  const updateParam = useCallback(
-    (key, value) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        if (key !== "page") next.set("page", "1");
-        return next;
-      });
-    },
-    [setSearchParams],
-  );
 
   const columns = [
     { id: "name", label: "Name" },
     {
       id: "hasqr",
-      sx: { px: 0 },
+      width: 38,
+      minWidth: 38,
+      sortable: false,
+      sx: {
+        px: 0,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      },
       render: (row) => row.qrTag && <QrIcon fontSize="small" />,
     },
     {
       id: "category",
       label: "Category",
+      value: (row) => row.category?.name ?? "",
       render: (row) => row.category?.name || "—",
     },
     { id: "shortId", label: "Short ID" },
     {
       id: "status",
       label: "Status",
-      sortable: false,
+      value: (row) => (row.hasActiveLoan ? "Checked out" : "Available"),
       render: (row) => (
         <StatusChip status={row.hasActiveLoan ? "CHECKED_OUT" : "AVAILABLE"} />
       ),
@@ -97,12 +106,24 @@ export default function GearList() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        height: "100%",
+        minHeight: 0,
+        mt: 2,
+        p: 0,
+      }}
+    >
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         mb={2}
+        flexShrink={0}
       >
         <Typography variant="h4">Gear</Typography>
         <Button
@@ -114,93 +135,30 @@ export default function GearList() {
         </Button>
       </Box>
 
-      <Box display="flex" gap={2} mb={2} flexWrap="wrap">
-        <TextField
-          placeholder="Search..."
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{ minWidth: 200 }}
-        />
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={category}
-            onChange={(e) => updateParam("category", e.target.value)}
-            label="Category"
-          >
-            <MenuItem value="">All</MenuItem>
-            {categories?.map((c) => (
-              <MenuItem key={c.id} value={c.id}>
-                {c.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 130 }}>
-          <InputLabel>Has QR Tag</InputLabel>
-          <Select
-            value={hasQrTag}
-            onChange={(e) => updateParam("hasQrTag", e.target.value)}
-            label="Has QR Tag"
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="true">Yes</MenuItem>
-            <MenuItem value="false">No</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>Active Loan</InputLabel>
-          <Select
-            value={hasLoan}
-            onChange={(e) => updateParam("hasLoan", e.target.value)}
-            label="Active Loan"
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="true">Checked Out</MenuItem>
-            <MenuItem value="false">Available</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+      {data?.truncated && <TruncationAlert totalCount={data.totalCount} />}
 
-      {isLoading ? (
-        <TableSkeleton />
-      ) : !data?.data?.length ? (
-        <EmptyState
-          message={
-            debouncedSearch ? `No items match your filters` : "No items found"
-          }
-        />
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={data.data}
-          totalCount={data.totalCount}
-          page={page - 1}
-          pageSize={pageSize}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onPageChange={(p) => updateParam("page", String(p + 1))}
-          onPageSizeChange={(ps) => {
-            updateParam("pageSize", String(ps));
-            updateParam("page", "1");
-          }}
-          onSortChange={(col, order) => {
-            updateParam("sortBy", col);
-            updateParam("sortOrder", order);
-          }}
-          onRowClick={(row) => navigate(`/admin/items/${row.shortId}`)}
-        />
-      )}
+      <Box
+        sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+      >
+        {isLoading ? (
+          <TableSkeleton />
+        ) : !allItems.length ? (
+          <EmptyState message="No items found" />
+        ) : (
+          <DataTable
+            columns={columns}
+            rows={rows}
+            loading={isFetching}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            sortModel={sortModel}
+            onSortModelChange={setSortModel}
+            toolbar={GearListToolbar}
+            toolbarProps={toolbarProps}
+            onRowClick={(row) => navigate(`/admin/items/${row.shortId}`)}
+          />
+        )}
+      </Box>
 
       <CreateItemDialog
         open={createOpen}
