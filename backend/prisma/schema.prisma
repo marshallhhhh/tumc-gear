@@ -116,8 +116,8 @@ model Loan {
   checkoutDate DateTime   @default(now())
   returnDate   DateTime?
 
-  openedLatitude    Float
-  openedLongitude   Float
+  openedLatitude    Float?
+  openedLongitude   Float?
 
   closedLatitude    Float?
   closedLongitude   Float?
