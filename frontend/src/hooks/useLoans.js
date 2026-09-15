@@ -1,10 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as loansApi from "../services/loans";
+import { fetchAllPages } from "../utils/fetchAllPages";
 
 export function useLoans(params) {
   return useQuery({
     queryKey: ["loans", params],
     queryFn: () => loansApi.getLoans(params),
+    staleTime: 5 * 60_000,
+  });
+}
+
+// Full loan list, paged through server-side. The grid then sorts/filters it
+// client-side without further round-trips.
+export function useAllLoans(params) {
+  return useQuery({
+    queryKey: ["loans", "all", params],
+    queryFn: () => fetchAllPages(loansApi.getLoans, params),
     staleTime: 5 * 60_000,
   });
 }

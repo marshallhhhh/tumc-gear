@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useLoans, useCancelLoan } from "../../hooks/useLoans";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAllLoans, useCancelLoan } from "../../hooks/useLoans";
+import useListState from "../../hooks/useListState";
 import { useNotification } from "../../context/NotificationContext";
 import { Container, Typography } from "@mui/material";
 import DataTable from "../../components/DataTable";
@@ -8,6 +9,7 @@ import StatusChip from "../../components/StatusChip";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
+import TruncationAlert from "../../components/TruncationAlert";
 import LoanDetailModal from "../../features/loans/LoanDetailModal";
 import { formatDate } from "../../utils/date";
 import LoanListToolbar from "../../features/loans/LoanListToolbar";
@@ -18,39 +20,44 @@ const isOverdue = (loan) =>
 
 export default function Loans() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { notify } = useNotification();
 
   const cancelLoan = useCancelLoan();
 
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [cancelConfirm, setCancelConfirm] = useState(false);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState(
-    searchParams.get("status")?.toUpperCase() || "",
-  );
-  const [borrower, setBorrower] = useState("");
 
-  const handleStatusChange = (newStatus) => {
-    setStatus(newStatus);
-    const params = new URLSearchParams(searchParams);
-    if (newStatus) {
-      params.set("status", newStatus.toLowerCase());
-    } else {
-      params.delete("status");
-    }
-    setSearchParams(params);
-  };
+  const {
+    search,
+    debouncedSearch,
+    setSearch,
+    filters,
+    setFilter,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+  } = useListState({
+    sortBy: "checkoutDate",
+    sortOrder: "desc",
+    filters: {
+      // Navbar links deep-link with a lowercase status, e.g. ?status=overdue.
+      status: {
+        default: "",
+        parse: (v) => v.toUpperCase(),
+        serialize: (v) => v.toLowerCase(),
+      },
+      borrower: "",
+    },
+  });
 
-  // Sync status state when URL params change (e.g. from navbar navigation)
-  useEffect(() => {
-    setStatus(searchParams.get("status")?.toUpperCase() || "");
-  }, [searchParams]);
-
-  // Single request for the whole list; the grid slices it client-side.
-  const { data, isLoading } = useLoans({ pageSize: 500 });
+  // The whole list is fetched once (paged through server-side); the grid then
+  // sorts, filters and paginates it client-side without further requests.
+  const { data, isLoading, isFetching } = useAllLoans();
 
   const allLoans = useMemo(() => data?.data ?? [], [data]);
+
+  const { status, borrower } = filters;
 
   const borrowers = useMemo(() => {
     const byId = new Map();
@@ -66,7 +73,7 @@ export default function Loans() {
   }, [allLoans]);
 
   const rows = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = debouncedSearch.trim().toLowerCase();
     return allLoans.filter((loan) => {
       if (status && (isOverdue(loan) ? "OVERDUE" : loan.status) !== status)
         return false;
@@ -78,16 +85,16 @@ export default function Loans() {
         loan.user?.email?.toLowerCase().includes(term)
       );
     });
-  }, [allLoans, search, status, borrower]);
+  }, [allLoans, debouncedSearch, status, borrower]);
 
   const toolbarProps = {
     search,
     onSearchChange: setSearch,
     status,
-    onStatusChange: handleStatusChange,
+    onStatusChange: (value) => setFilter("status", value),
     borrowers,
     borrower,
-    onBorrowerChange: setBorrower,
+    onBorrowerChange: (value) => setFilter("borrower", value),
   };
 
   const handleCancel = async () => {
@@ -172,6 +179,8 @@ export default function Loans() {
         Loans
       </Typography>
 
+      {data?.truncated && <TruncationAlert totalCount={data.totalCount} />}
+
       {isLoading ? (
         <TableSkeleton />
       ) : !allLoans.length ? (
@@ -180,8 +189,11 @@ export default function Loans() {
         <DataTable
           columns={columns}
           rows={rows}
-          sortBy="checkoutDate"
-          sortOrder="desc"
+          loading={isFetching}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
           toolbar={LoanListToolbar}
           toolbarProps={toolbarProps}
           onRowClick={(row) => setSelectedLoan(row)}

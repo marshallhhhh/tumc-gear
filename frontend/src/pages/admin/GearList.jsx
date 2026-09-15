@@ -1,12 +1,14 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useItems } from "../../hooks/useItems";
+import { useAllItems } from "../../hooks/useItems";
 import { useCategories } from "../../hooks/useCategories";
+import useListState from "../../hooks/useListState";
 import { Container, Typography, Box, Button } from "@mui/material";
 import { Add as AddIcon, QrCode as QrIcon } from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
 import StatusChip from "../../components/StatusChip";
 import EmptyState from "../../components/EmptyState";
+import TruncationAlert from "../../components/TruncationAlert";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import CreateItemDialog from "../../features/items/CreateItemDialog";
 import GearListToolbar from "../../features/items/GearListToolbar";
@@ -15,19 +17,34 @@ export default function GearList() {
   const navigate = useNavigate();
   const { data: categories } = useCategories();
 
-  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [category, setCategory] = useState("");
-  const [hasLoan, setHasLoan] = useState("");
-  const [hasQrTag, setHasQrTag] = useState("");
 
-  // Single request for the whole list; the grid slices it client-side.
-  const { data, isLoading } = useItems({ pageSize: 500 });
+  const {
+    search,
+    debouncedSearch,
+    setSearch,
+    filters,
+    setFilter,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+  } = useListState({
+    sortBy: "name",
+    sortOrder: "asc",
+    filters: { category: "", hasQrTag: "", hasLoan: "" },
+  });
+
+  // The whole list is fetched once (paged through server-side); the grid then
+  // sorts, filters and paginates it client-side without further requests.
+  const { data, isLoading, isFetching } = useAllItems();
 
   const allItems = useMemo(() => data?.data ?? [], [data]);
 
+  const { category, hasQrTag, hasLoan } = filters;
+
   const rows = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = debouncedSearch.trim().toLowerCase();
     return allItems.filter((item) => {
       if (category && item.category?.id !== category) return false;
       if (hasQrTag && Boolean(item.qrTag) !== (hasQrTag === "true"))
@@ -38,21 +55,22 @@ export default function GearList() {
       return (
         item.name?.toLowerCase().includes(term) ||
         item.shortId?.toLowerCase().includes(term) ||
+        item.serialNumber?.toLowerCase().includes(term) ||
         item.description?.toLowerCase().includes(term)
       );
     });
-  }, [allItems, search, category, hasQrTag, hasLoan]);
+  }, [allItems, debouncedSearch, category, hasQrTag, hasLoan]);
 
   const toolbarProps = {
     search,
     onSearchChange: setSearch,
     categories,
     category,
-    onCategoryChange: setCategory,
+    onCategoryChange: (value) => setFilter("category", value),
     hasQrTag,
-    onHasQrTagChange: setHasQrTag,
+    onHasQrTagChange: (value) => setFilter("hasQrTag", value),
     hasLoan,
-    onHasLoanChange: setHasLoan,
+    onHasLoanChange: (value) => setFilter("hasLoan", value),
   };
 
   const columns = [
@@ -117,6 +135,8 @@ export default function GearList() {
         </Button>
       </Box>
 
+      {data?.truncated && <TruncationAlert totalCount={data.totalCount} />}
+
       <Box
         sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
       >
@@ -128,8 +148,11 @@ export default function GearList() {
           <DataTable
             columns={columns}
             rows={rows}
-            sortBy="name"
-            sortOrder="asc"
+            loading={isFetching}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            sortModel={sortModel}
+            onSortModelChange={setSortModel}
             toolbar={GearListToolbar}
             toolbarProps={toolbarProps}
             onRowClick={(row) => navigate(`/admin/items/${row.shortId}`)}

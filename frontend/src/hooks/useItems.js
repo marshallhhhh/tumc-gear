@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as itemsApi from "../services/items";
+import { fetchAllPages } from "../utils/fetchAllPages";
 
 export function useItems(params, { enabled = true } = {}) {
   return useQuery({
@@ -7,6 +8,16 @@ export function useItems(params, { enabled = true } = {}) {
     queryFn: () => itemsApi.getItems(params),
     staleTime: 5 * 60_000,
     enabled,
+  });
+}
+
+// Full item list, paged through server-side. The grid then sorts/filters it
+// client-side without further round-trips.
+export function useAllItems(params) {
+  return useQuery({
+    queryKey: ["items", "all", params],
+    queryFn: () => fetchAllPages(itemsApi.getItems, params),
+    staleTime: 5 * 60_000,
   });
 }
 

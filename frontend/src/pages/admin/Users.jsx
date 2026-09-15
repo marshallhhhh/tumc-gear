@@ -1,27 +1,46 @@
 import { useState, useMemo } from "react";
-import { useUsers, useUser } from "../../hooks/useUsers";
+import { useAllUsers, useUser } from "../../hooks/useUsers";
+import useListState from "../../hooks/useListState";
 import { Container, Typography, Chip } from "@mui/material";
 import { AdminPanelSettingsOutlined, PersonOutline } from "@mui/icons-material";
 import DataTable from "../../components/DataTable";
 import { TableSkeleton } from "../../components/PageSkeleton";
 import EmptyState from "../../components/EmptyState";
+import TruncationAlert from "../../components/TruncationAlert";
 import UserDetailModal from "../../features/users/UserDetailModal";
 import { formatDate } from "../../utils/date";
 import UserListToolbar from "../../features/users/UserListToolbar";
 
 export default function Users() {
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [search, setSearch] = useState("");
-  const [role, setRole] = useState("");
 
-  // Single request for the whole list; the grid slices it client-side.
-  const { data, isLoading } = useUsers({ pageSize: 500 });
+  const {
+    search,
+    debouncedSearch,
+    setSearch,
+    filters,
+    setFilter,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+  } = useListState({
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    filters: { role: "" },
+  });
+
+  // The whole list is fetched once (paged through server-side); the grid then
+  // sorts, filters and paginates it client-side without further requests.
+  const { data, isLoading, isFetching } = useAllUsers();
   const { data: selectedUser } = useUser(selectedUserId);
 
   const allUsers = useMemo(() => data?.data ?? [], [data]);
 
+  const { role } = filters;
+
   const rows = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = debouncedSearch.trim().toLowerCase();
     return allUsers.filter((user) => {
       if (role && user.role !== role) return false;
       if (!term) return true;
@@ -30,13 +49,13 @@ export default function Users() {
         user.email?.toLowerCase().includes(term)
       );
     });
-  }, [allUsers, search, role]);
+  }, [allUsers, debouncedSearch, role]);
 
   const toolbarProps = {
     search,
     onSearchChange: setSearch,
     role,
-    onRoleChange: setRole,
+    onRoleChange: (value) => setFilter("role", value),
   };
 
   const columns = [
@@ -111,6 +130,8 @@ export default function Users() {
         Members
       </Typography>
 
+      {data?.truncated && <TruncationAlert totalCount={data.totalCount} />}
+
       {isLoading ? (
         <TableSkeleton />
       ) : !allUsers.length ? (
@@ -119,9 +140,11 @@ export default function Users() {
         <DataTable
           columns={columns}
           rows={rows}
-          sortBy="createdAt"
-          sortOrder="desc"
-          showToolbar
+          loading={isFetching}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
           toolbar={UserListToolbar}
           toolbarProps={toolbarProps}
           onRowClick={(row) => setSelectedUserId(row.id)}

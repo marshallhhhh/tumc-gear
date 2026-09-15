@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as usersApi from "../services/users";
+import { fetchAllPages } from "../utils/fetchAllPages";
 
 export function useMe() {
   return useQuery({
@@ -32,6 +33,16 @@ export function useUsers(params) {
   return useQuery({
     queryKey: ["users", "list", params],
     queryFn: () => usersApi.getUsers(params),
+    staleTime: 5 * 60_000,
+  });
+}
+
+// Full user list, paged through server-side. The grid then sorts/filters it
+// client-side without further round-trips.
+export function useAllUsers(params) {
+  return useQuery({
+    queryKey: ["users", "list", "all", params],
+    queryFn: () => fetchAllPages(usersApi.getUsers, params),
     staleTime: 5 * 60_000,
   });
 }

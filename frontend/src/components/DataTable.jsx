@@ -8,6 +8,10 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
  * pagination are handled by the grid itself — pass the full row set once and
  * let the user slice it without further network/DB round-trips.
  *
+ * Pagination and sorting are uncontrolled by default (seeded from `pageSize` /
+ * `sortBy` / `sortOrder`). Pass `paginationModel` / `sortModel` together with
+ * their change handlers to drive them from outside, e.g. from the URL.
+ *
  * Column shape: { id, label, render?, value?, type?, sortable?, filterable?, sx? }
  * `value(row)` supplies the raw value used for sorting/filtering/quick search
  * when `render` produces non-textual content.
@@ -21,6 +25,10 @@ export default function DataTable({
   pageSize = 25,
   sortBy,
   sortOrder = "asc",
+  paginationModel,
+  onPaginationModelChange,
+  sortModel,
+  onSortModelChange,
   showToolbar = false,
   toolbar,
   toolbarProps,
@@ -44,9 +52,36 @@ export default function DataTable({
     };
   });
 
+  // The community DataGrid always paginates, so "unpaginated" means one page
+  // large enough to hold every row — otherwise rows silently disappear.
   const paginationProps = paginated
     ? { pageSizeOptions: PAGE_SIZE_OPTIONS }
-    : { hideFooter: true };
+    : {
+        hideFooter: true,
+        pageSizeOptions: [Math.max(rows.length, 1)],
+        paginationModel: { page: 0, pageSize: Math.max(rows.length, 1) },
+      };
+
+  const controlledProps = {};
+  if (paginated && paginationModel) {
+    controlledProps.paginationModel = paginationModel;
+    controlledProps.onPaginationModelChange = onPaginationModelChange;
+  }
+  if (sortModel) {
+    controlledProps.sortModel = sortModel;
+    controlledProps.onSortModelChange = onSortModelChange;
+  }
+
+  const initialState = {
+    sorting:
+      sortBy && !sortModel
+        ? { sortModel: [{ field: sortBy, sort: sortOrder }] }
+        : undefined,
+    pagination:
+      paginated && !paginationModel
+        ? { paginationModel: { pageSize } }
+        : undefined,
+  };
 
   return (
     <Paper
@@ -71,17 +106,11 @@ export default function DataTable({
         slotProps={
           toolbar && toolbarProps ? { toolbar: toolbarProps } : undefined
         }
-        initialState={{
-          sorting: sortBy
-            ? { sortModel: [{ field: sortBy, sort: sortOrder }] }
-            : undefined,
-          pagination: {
-            paginationModel: { pageSize: paginated ? pageSize : 100 },
-          },
-        }}
+        initialState={initialState}
         sortingOrder={["asc", "desc"]}
         onRowClick={onRowClick ? (params) => onRowClick(params.row) : undefined}
         {...paginationProps}
+        {...controlledProps}
         sx={{
           minHeight: 0,
           border: 0,
