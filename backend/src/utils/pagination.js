@@ -1,14 +1,16 @@
-export const MAX_PAGE_SIZE = 500;
+export const MAX_PAGE_SIZE = 100;
 
 export function buildPaginationQuery({
   page = 1,
   pageSize = 50,
+  maxPageSize = MAX_PAGE_SIZE,
   sortBy,
   sortOrder = "asc",
   allowedSortFields = [],
 }) {
   const p = Math.max(1, Number(page));
-  const ps = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(pageSize)));
+  const resolvedMaxPageSize = Math.max(1, Number(maxPageSize));
+  const ps = Math.min(resolvedMaxPageSize, Math.max(1, Number(pageSize)));
   const skip = (p - 1) * ps;
 
   let orderBy;
