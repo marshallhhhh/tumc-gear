@@ -41,7 +41,7 @@ const statCards = [
     key: "activeLoans",
     label: "Active Loans",
     icon: LoansIcon,
-    path: "/admin/loans",
+    path: "/admin/loans?status=ACTIVE",
   },
   {
     key: "overdueLoans",

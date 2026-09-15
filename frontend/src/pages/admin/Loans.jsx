@@ -75,7 +75,11 @@ export default function Loans() {
   const rows = useMemo(() => {
     const term = debouncedSearch.trim().toLowerCase();
     return allLoans.filter((loan) => {
-      if (status && (isOverdue(loan) ? "OVERDUE" : loan.status) !== status)
+      	
+       if (
+         status &&
+         (status === "OVERDUE" ? !isOverdue(loan) : loan.status !== status)
+       )
         return false;
       if (borrower && loan.user?.id !== borrower) return false;
       if (!term) return true;
