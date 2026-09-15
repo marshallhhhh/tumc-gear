@@ -65,10 +65,10 @@ export default function LoanDetailModal({
         return;
       }
 
-      const { latitude, longitude } = await getLocation();
+      const location = await getLocation();
       await returnLoan.mutateAsync({
         id: loan.id,
-        data: { latitude, longitude },
+        data: { latitude: location?.latitude, longitude: location?.longitude },
       });
       notify("Item returned successfully", "success");
       onClose();

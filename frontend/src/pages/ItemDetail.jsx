@@ -70,13 +70,15 @@ export default function ItemDetail() {
 
   const handleCheckout = async () => {
     try {
-      const { latitude, longitude } = await getLocation();
+      const location = await getLocation();
+
       await createLoan.mutateAsync({
         itemId: item.id,
         days: parseInt(days, 10),
-        latitude,
-        longitude,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
       });
+
       setCheckoutOpen(false);
       notify("Item checked out successfully", "success");
     } catch (err) {
@@ -89,10 +91,10 @@ export default function ItemDetail() {
 
   const handleReturn = async () => {
     try {
-      const { latitude, longitude } = await getLocation();
+      const location = await getLocation();
       await returnLoan.mutateAsync({
         id: activeLoan.id,
-        data: { latitude, longitude },
+        data: { latitude: location?.latitude, longitude: location?.longitude },
       });
       notify("Item returned successfully", "success");
     } catch (err) {
