@@ -1,3 +1,4 @@
+import "../config/sentry.js"
 import { Router } from "express";
 import categoriesRouter from "./categories.js";
 import itemRouter, { itemsListRouter } from "./items.js";
@@ -30,6 +31,14 @@ const router = Router();
  */
 router.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+router.get("/debug-sentry", function mainHandler(req, res) {
+  // Send a log before throwing the error
+  Sentry.logger.info('User triggered test error', {
+    action: 'test_error_endpoint',
+  });
+  throw new Error("My first Sentry error!");
 });
 
 router.use("/categories", categoriesRouter);

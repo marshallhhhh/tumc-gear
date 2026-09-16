@@ -7,6 +7,7 @@ import { logger } from "./config/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./routes/index.js";
 import { globalRateLimiter } from "./middleware/rateLimiter.js";
+import * as Sentry from "@sentry/node"
 
 const app = express();
 
@@ -31,6 +32,8 @@ if (env.NODE_ENV !== "production") {
 
 app.use(globalRateLimiter);
 app.use(router);
+
+Sentry.setupExpressErrorHandler(app);
 
 app.use(errorHandler);
 
