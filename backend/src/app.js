@@ -7,7 +7,7 @@ import { logger } from "./config/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./routes/index.js";
 import { globalRateLimiter } from "./middleware/rateLimiter.js";
-import * as Sentry from "@sentry/node"
+import * as Sentry from "@sentry/node";
 
 const app = express();
 
@@ -21,22 +21,24 @@ const ALLOWED_REQUEST_HEADERS = [
   "origin",
 ];
 
-app.use(pinoHttp({ 
-  logger,
-  serializers: {
-    req: (req) => ({
-      id: req.id,
-      method: req.method,
-      url: req.url,
+app.use(
+  pinoHttp({
+    logger,
+    serializers: {
+      req: (req) => ({
+        id: req.id,
+        method: req.method,
+        url: req.url,
 
-      headers: Object.fromEntries(
-        Object.entries(req.headers).filter(([key]) =>
-          ALLOWED_REQUEST_HEADERS.includes(key.toLowerCase()),
+        headers: Object.fromEntries(
+          Object.entries(req.headers).filter(([key]) =>
+            ALLOWED_REQUEST_HEADERS.includes(key.toLowerCase()),
+          ),
         ),
-      ),
-    }),
-  },
- }));
+      }),
+    },
+  }),
+);
 
 app.use(helmet());
 app.use(

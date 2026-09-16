@@ -1,4 +1,4 @@
-import "../config/sentry.js"
+import "../config/sentry.js";
 import { Router } from "express";
 import categoriesRouter from "./categories.js";
 import itemRouter, { itemsListRouter } from "./items.js";
@@ -7,7 +7,7 @@ import loansRouter from "./loans.js";
 import usersRouter from "./users.js";
 import foundReportsRouter from "./foundReports.js";
 import dashboardRouter from "./dashboard.js";
-import * as Sentry from "@sentry/node"
+import * as Sentry from "@sentry/node";
 
 const router = Router();
 
@@ -34,10 +34,10 @@ router.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-router.get("/debug-sentry", function mainHandler(req, res) {
+router.get("/debug-sentry", function mainHandler(_req, _res) {
   // Send a log before throwing the error
-  Sentry.logger.info('User triggered test error', {
-    action: 'test_error_endpoint',
+  Sentry.logger.info("User triggered test error", {
+    action: "test_error_endpoint",
   });
   throw new Error("My first Sentry error!");
 });
