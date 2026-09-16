@@ -7,6 +7,7 @@ import loansRouter from "./loans.js";
 import usersRouter from "./users.js";
 import foundReportsRouter from "./foundReports.js";
 import dashboardRouter from "./dashboard.js";
+import * as Sentry from "@sentry/node"
 
 const router = Router();
 

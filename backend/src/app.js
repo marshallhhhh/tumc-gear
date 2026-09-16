@@ -14,7 +14,30 @@ const app = express();
 // application set behind nginx reverse proxy
 app.set("trust proxy", 1);
 
-app.use(pinoHttp({ logger }));
+const ALLOWED_REQUEST_HEADERS = [
+  "user-agent",
+  "content-type",
+  "accept",
+  "origin",
+];
+
+app.use(pinoHttp({ 
+  logger,
+  serializers: {
+    req: (req) => ({
+      id: req.id,
+      method: req.method,
+      url: req.url,
+
+      headers: Object.fromEntries(
+        Object.entries(req.headers).filter(([key]) =>
+          ALLOWED_REQUEST_HEADERS.includes(key.toLowerCase()),
+        ),
+      ),
+    }),
+  },
+ }));
+
 app.use(helmet());
 app.use(
   cors({

@@ -8,4 +8,16 @@ Sentry.init({
     // userInfo: false,
     // httpBodies: [],
   },
+  integrations: [Sentry.pinoIntegration({
+    error: {
+        levels: ["error", "fatal"],
+        handled: true,
+      },
+  })],
+  beforeSending: (log) => {
+    if (log.request?.url?.includes("/health")) {
+      return null;
+    }
+    return log; 
+  },
 });
