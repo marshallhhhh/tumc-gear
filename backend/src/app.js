@@ -7,13 +7,39 @@ import { logger } from "./config/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./routes/index.js";
 import { globalRateLimiter } from "./middleware/rateLimiter.js";
+import * as Sentry from "@sentry/node";
 
 const app = express();
 
 // application set behind nginx reverse proxy
 app.set("trust proxy", 1);
 
-app.use(pinoHttp({ logger }));
+const ALLOWED_REQUEST_HEADERS = [
+  "user-agent",
+  "content-type",
+  "accept",
+  "origin",
+];
+
+app.use(
+  pinoHttp({
+    logger,
+    serializers: {
+      req: (req) => ({
+        id: req.id,
+        method: req.method,
+        url: req.url,
+
+        headers: Object.fromEntries(
+          Object.entries(req.headers).filter(([key]) =>
+            ALLOWED_REQUEST_HEADERS.includes(key.toLowerCase()),
+          ),
+        ),
+      }),
+    },
+  }),
+);
+
 app.use(helmet());
 app.use(
   cors({
@@ -31,6 +57,8 @@ if (env.NODE_ENV !== "production") {
 
 app.use(globalRateLimiter);
 app.use(router);
+
+Sentry.setupExpressErrorHandler(app);
 
 app.use(errorHandler);
 
