@@ -40,7 +40,7 @@ export default function LocationMinimap({ latitude, longitude, height = 200 }) {
         >
           <TileLayer
             attribution='&copy; <a href="https://carto.com/">Carto</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            url="https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=cb1_3lb9_1_2a9ec175523c7f6a0ba8ddf9"
           />
           <Marker position={position} />
         </MapContainer>

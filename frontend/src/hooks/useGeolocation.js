@@ -2,19 +2,15 @@ import { useState, useCallback } from "react";
 
 export function useGeolocation() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const getLocation = useCallback(() => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       if (!navigator.geolocation) {
-        const err = "Geolocation is not supported by your browser";
-        setError(err);
-        reject(new Error(err));
+        resolve(null);
         return;
       }
 
       setLoading(true);
-      setError(null);
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -26,15 +22,12 @@ export function useGeolocation() {
         },
         (_err) => {
           setLoading(false);
-          const msg =
-            "Location access denied. Please enable location services to continue.";
-          setError(msg);
-          reject(new Error(msg));
+          resolve(null);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     });
   }, []);
 
-  return { getLocation, loading, error };
+  return { getLocation, loading };
 }
