@@ -4,7 +4,7 @@ export function useGeolocation() {
   const [loading, setLoading] = useState(false);
 
   const getLocation = useCallback(() => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       if (!navigator.geolocation) {
         resolve(null);
         return;
